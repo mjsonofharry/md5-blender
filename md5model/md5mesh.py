@@ -15,18 +15,12 @@ class Joint:
     def parse(cls, data: str):
         @generate
         def parser():
-            name = yield spaces() >> string('"') >> regex(r'[^\\"]+') << string('"')
-            parentIndex = yield spaces() >> integer()
-            x = yield spaces() >> string('(') >> spaces() >> number()
-            y = yield space() >> number()
-            z = yield space() >> number() << spaces() << string(')')
-            position = (x, y, z)
-            qx = yield spaces() >> string('(') >> spaces() >> number()
-            qy = yield space() >> number()
-            qz = yield space() >> number() << spaces() << string(')')
-            orientation = (qx, qy, qz)
-            comment = yield spaces() >> string('//') >> spaces() >> (many(letter())).parsecmap(concatFn)
-            return cls(name=name, parentIndex=parentIndex, position=position, orientation=orientation, comment=comment)
+            name = yield spaces1() >> quoted()
+            parentIndex = yield spaces1() >> integer()
+            (x, y, z) = yield spaces1() >> parens(sepBy1(number(), spaces1()))
+            (qx, qy, qz) = yield spaces1() >> parens(sepBy1(number(), spaces1()))
+            comment = yield spaces1() >> string('//') >> spaces1() >> (many(letter())).parsecmap(concatFn)
+            return cls(name=name, parentIndex=parentIndex, position=(x, y, z), orientation=(qx, qy, qz), comment=comment)
         return parser.parse(data)
 
     def to_string(self):
@@ -46,13 +40,11 @@ class Vert:
     def parse(cls, data: str):
         @generate
         def parser():
-            index = yield spaces() >> string("vert") >> space() >> integer()
-            u = yield spaces() >> string('(') >> spaces() >> number() << space()
-            v = yield number() << spaces() << string(')') << spaces()
-            uv = (u, v)
-            weightStart = yield integer() << spaces()
-            weightCount = yield integer()
-            return cls(index=index, uv=uv, weightStart=weightStart, weightCount=weightCount)
+            index = yield spaces1() >> keyValue('vert', integer())
+            (u, v) = yield spaces1() >> parens(sepBy1(number(), spaces1()))
+            weightStart = yield spaces1() >> integer()
+            weightCount = yield spaces1() >> integer()
+            return cls(index=index, uv=(u, v), weightStart=weightStart, weightCount=weightCount)
         return parser.parse(data)
 
     def to_string(self):
@@ -69,12 +61,9 @@ class Tri:
     def parse(cls, data: str):
         @generate
         def parser():
-            index = yield spaces() >> string("tri") >> spaces() >> integer()
-            v1 = yield spaces() >> integer()
-            v2 = yield spaces() >> integer()
-            v3 = yield spaces() >> integer()
-            verts = (v1, v2, v3)
-            return cls(index=index, verts=verts)
+            index = yield spaces1() >> keyValue('tri', integer())
+            (v1, v2, v3) = yield spaces1() >> sepBy1(integer(), spaces1())
+            return cls(index=index, verts=(v1, v2, v3))
         return parser.parse(data)
 
     def to_string(self):
@@ -93,14 +82,11 @@ class Weight:
     def parse(cls, data: str):
         @generate
         def parser():
-            index = yield spaces() >> string("weight") >> spaces() >> integer()
-            jointIndex = yield spaces() >> integer()
-            bias = yield spaces() >> number()
-            x = yield spaces() >> string('(') >> spaces() >> number()
-            y = yield spaces() >> number()
-            z = yield spaces() >> number() << spaces() << string(')')
-            position = (x, y, z)
-            return cls(index=index, jointIndex=jointIndex, bias=bias, position=position)
+            index = yield spaces1() >> keyValue('weight', integer())
+            jointIndex = yield spaces1() >> integer()
+            bias = yield spaces1() >> number()
+            (x, y, z) = yield spaces1() >> parens(sepBy1(number(), spaces1()))
+            return cls(index=index, jointIndex=jointIndex, bias=bias, position=(x, y, z))
         return parser.parse(data)
 
     def to_string(self):
