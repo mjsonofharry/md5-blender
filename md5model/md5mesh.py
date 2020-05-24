@@ -15,11 +15,11 @@ class Joint:
     def parse(cls, data: str):
         @generate
         def parser():
-            name = yield spaces1() >> quoted()
-            parentIndex = yield spaces1() >> integer()
-            (x, y, z) = yield spaces1() >> parens(sepBy1(number(), spaces1()))
-            (qx, qy, qz) = yield spaces1() >> parens(sepBy1(number(), spaces1()))
-            comment = yield spaces1() >> string('//') >> spaces1() >> (many(letter())).parsecmap(concatFn)
+            name = yield spaces1() >> quoted() << spaces1()
+            parentIndex = yield integer() << spaces1()
+            (x, y, z) = yield parens(sepBy1(number(), spaces1())) << spaces1()
+            (qx, qy, qz) = yield parens(sepBy1(number(), spaces1())) << spaces1()
+            comment = yield string('//') >> spaces1() >> (many(letter())).parsecmap(concatFn)
             return cls(name=name, parentIndex=parentIndex, position=(x, y, z), orientation=(qx, qy, qz), comment=comment)
         return parser.parse(data)
 
@@ -40,10 +40,10 @@ class Vert:
     def parse(cls, data: str):
         @generate
         def parser():
-            index = yield spaces1() >> keyValue('vert', integer())
-            (u, v) = yield spaces1() >> parens(sepBy1(number(), spaces1()))
-            weightStart = yield spaces1() >> integer()
-            weightCount = yield spaces1() >> integer()
+            index = yield spaces1() >> keyValue('vert', integer()) << spaces1()
+            (u, v) = yield parens(sepBy1(number(), spaces1())) << spaces1()
+            weightStart = yield integer() << spaces1()
+            weightCount = yield integer()
             return cls(index=index, uv=(u, v), weightStart=weightStart, weightCount=weightCount)
         return parser.parse(data)
 
@@ -61,8 +61,8 @@ class Tri:
     def parse(cls, data: str):
         @generate
         def parser():
-            index = yield spaces1() >> keyValue('tri', integer())
-            (v1, v2, v3) = yield spaces1() >> sepBy1(integer(), spaces1())
+            index = yield spaces1() >> keyValue('tri', integer()) << spaces1()
+            (v1, v2, v3) = yield sepBy1(integer(), spaces1())
             return cls(index=index, verts=(v1, v2, v3))
         return parser.parse(data)
 
@@ -82,10 +82,10 @@ class Weight:
     def parse(cls, data: str):
         @generate
         def parser():
-            index = yield spaces1() >> keyValue('weight', integer())
-            jointIndex = yield spaces1() >> integer()
-            bias = yield spaces1() >> number()
-            (x, y, z) = yield spaces1() >> parens(sepBy1(number(), spaces1()))
+            index = yield spaces1() >> keyValue('weight', integer()) << spaces1()
+            jointIndex = yield integer() << spaces1()
+            bias = yield number() << spaces1()
+            (x, y, z) = yield parens(sepBy1(number(), spaces1()))
             return cls(index=index, jointIndex=jointIndex, bias=bias, position=(x, y, z))
         return parser.parse(data)
 
