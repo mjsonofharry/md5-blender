@@ -30,7 +30,7 @@ class Joint:
     def to_string(self):
         (x, y, z) = self.position
         (qx, qy, qz) = self.orientation
-        return f'\t"{self.name}"\t{self.parentIndex} ( {x} {y} {z} ) ( {qx} {qy} {qz} )\t\t// {self.comment}'
+        return f'"{self.name}"\t{self.parentIndex} ( {x} {y} {z} ) ( {qx} {qy} {qz} )\t\t// {self.comment}'
 
 
 class Vert:
@@ -57,7 +57,7 @@ class Vert:
 
     def to_string(self):
         (u, v) = self.uv
-        return f'\tvert {self.index} ( {u} {v} ) {self.weightStart} {self.weightCount}'
+        return f'vert {self.index} ( {u} {v} ) {self.weightStart} {self.weightCount}'
 
 
 class Tri:
@@ -80,7 +80,7 @@ class Tri:
 
     def to_string(self):
         (v1, v2, v3) = self.verts
-        return f'\ttri {self.index} {v1} {v2} {v3}'
+        return f'tri {self.index} {v1} {v2} {v3}'
 
 
 class Weight:
@@ -107,7 +107,7 @@ class Weight:
 
     def to_string(self):
         (x, y, z) = self.position
-        return f'\tweight {self.index} {self.jointIndex} {self.bias} ( {x} {y} {z} )'
+        return f'weight {self.index} {self.jointIndex} {self.bias} ( {x} {y} {z} )'
 
 
 class Mesh:
@@ -141,4 +141,16 @@ class Mesh:
         return cls.parser().parse(data)
 
     def to_string(self):
-        return ''
+        comment = f'\t// {self.comment}\n'
+        shader = f'\tshader "{self.shader}"\n\n'
+
+        numverts = f'\tnumverts {len(self.verts)}\n\t'
+        verts = '\n\t'.join([x.to_string() for x in self.verts]) + '\n\n'
+
+        numtris = f'\tnumtris {len(self.tris)}\n\t'
+        tris = '\n\t'.join([x.to_string() for x in self.tris]) + '\n\n'
+
+        numweights = f'\tnumweights {len(self.weights)}\n\t'
+        weights = '\n\t'.join([x.to_string() for x in self.weights]) + '\n'
+
+        return 'mesh {\n' + comment + shader + numverts + verts + numtris + tris + numweights + weights + '}\n'
