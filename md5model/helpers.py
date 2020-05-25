@@ -34,7 +34,7 @@ def endOfLine():
 
 def slashyComment():
     '''Parse an optional comment in the form of `// this is a comment`'''
-    return ((spaces() >> string('//') >> toLineEnd()) ^ spaces()).parsecmap(lambda x: concatFn(x).strip())
+    return ((spaces() >> string('//') >> toLineEnd()) ^ spaces().parsecmap(lambda xs: '')).parsecmap(concatFn)
 
 
 def quoted():

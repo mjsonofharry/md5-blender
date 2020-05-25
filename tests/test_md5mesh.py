@@ -4,13 +4,22 @@ from .context import md5mesh
 
 class TestJoint:
     def test_parse_nocomment(self):
-        text = '\t"origin"\t-1 ( 0 0 0 ) ( 0 0 -0.7071067812 )\t\t//  '
+        text = '\t"origin"\t-1 ( 0 0 0 ) ( 0 0 -0.7071067812 )\t\t//'
         joint = md5mesh.Joint.parse(text)
         assert joint.name == 'origin'
         assert joint.parentIndex == -1
         assert joint.position == (0.0, 0.0, 0.0)
         assert joint.orientation == (0.0, 0.0, -0.7071067812)
         assert joint.comment == ''
+
+    def test_parse_blankcomment(self):
+        text = '\t"origin"\t-1 ( 0 0 0 ) ( 0 0 -0.7071067812 )\t\t//  '
+        joint = md5mesh.Joint.parse(text)
+        assert joint.name == 'origin'
+        assert joint.parentIndex == -1
+        assert joint.position == (0.0, 0.0, 0.0)
+        assert joint.orientation == (0.0, 0.0, -0.7071067812)
+        assert joint.comment == '  '
 
     def test_parse_noslashes(self):
         text = '\t"origin"\t-1 ( 0 0 0 ) ( 0 0 -0.7071067812 )'
@@ -28,7 +37,7 @@ class TestJoint:
         assert joint.parentIndex == 0
         assert joint.position == (0.0, 0.0, 0.0)
         assert joint.orientation == (0.0, 0.0, -0.7071067812)
-        assert joint.comment == 'origin'
+        assert joint.comment == ' origin'
 
     def test_parse_nontrivial(self):
         text = '\t"waist"\t0 ( -0.465389 0 51.328655 ) ( -0.5394861067 -0.5394861067 -0.457 )\t\t// origin'
@@ -37,7 +46,7 @@ class TestJoint:
         assert joint.parentIndex == 0
         assert joint.position == (-0.465389, 0, 51.328655)
         assert joint.orientation == (-0.5394861067, -0.5394861067, -0.457)
-        assert joint.comment == 'origin'
+        assert joint.comment == ' origin'
 
     def test_parse_nontrivial_alternative(self):
         text = '\t"Rhand"\t9 ( -3.50706 -28.3922 58.702999 ) ( 0.3317336325 0.3162666777 -0.3598525295 )\t\t// Rloarm'
@@ -46,11 +55,11 @@ class TestJoint:
         assert joint.parentIndex == 9
         assert joint.position == (-3.50706, -28.3922, 58.702999)
         assert joint.orientation == (0.3317336325, 0.3162666777, -0.3598525295)
-        assert joint.comment == 'Rloarm'
+        assert joint.comment == ' Rloarm'
 
     def test_tostring(self):
-        joint = md5mesh.Joint(name='Rhand', parentIndex=9, position=(-3.50706, -28.3922, 58.702999),
-                              orientation=(0.3317336325, 0.3162666777, -0.3598525295), comment='Rloarm')
+        text = '\t"Rhand"\t9 ( -3.50706 -28.3922 58.702999 ) ( 0.3317336325 0.3162666777 -0.3598525295 )\t\t// Rloarm'
+        joint = md5mesh.Joint.parse(text)
         assert joint.to_string() == '"Rhand"\t9 ( -3.50706 -28.3922 58.702999 ) ( 0.3317336325 0.3162666777 -0.3598525295 )\t\t// Rloarm'
 
 
@@ -64,8 +73,8 @@ class TestVert:
         assert vert.weightCount == 2
 
     def test_tostring(self):
-        vert = md5mesh.Vert(index=7, uv=(0.574369, 0.525882),
-                            weightStart=10, weightCount=2)
+        text = '\tvert 7 ( 0.574369 0.525882 ) 10 2'
+        vert = md5mesh.Vert.parse(text)
         assert vert.to_string() == 'vert 7 ( 0.574369 0.525882 ) 10 2'
 
 
@@ -77,7 +86,8 @@ class TestTri:
         assert tri.verts == (707, 690, 691)
 
     def test_tostring(self):
-        tri = md5mesh.Tri(index=1019, verts=(707, 690, 691))
+        text = '\ttri 1019 707 690 691'
+        tri = md5mesh.Tri.parse(text)
         assert tri.to_string() == 'tri 1019 707 690 691'
 
 
@@ -91,8 +101,8 @@ class TestWeight:
         assert weight.position == (-3.839379, 26.337955, 4.979258)
 
     def test_tostring(self):
-        weight = md5mesh.Weight(
-            index=443, jointIndex=67, bias=0.178646, position=(-3.839379, 26.337955, 4.979258))
+        text = '\tweight 443 67 0.178646 ( -3.839379 26.337955 4.979258 )'
+        weight = md5mesh.Weight.parse(text)
         assert weight.to_string() == 'weight 443 67 0.178646 ( -3.839379 26.337955 4.979258 )'
 
 
@@ -147,7 +157,8 @@ class TestMesh:
         assert len(mesh.weights) == 17
 
     def test_tostring(self):
-        assert md5mesh.Mesh.parse(TestMesh.MESH_SAMPLE).to_string() == TestMesh.MESH_SAMPLE
+        assert md5mesh.Mesh.parse(
+            TestMesh.MESH_SAMPLE).to_string() == TestMesh.MESH_SAMPLE
 
 
 class TestMd5Mesh:
@@ -206,4 +217,5 @@ mesh {
         assert len(mesh.meshes) == 2
 
     def test_tostring(self):
-        assert md5mesh.Md5Mesh.parse(TestMd5Mesh.MD5MESH_SAMPLE).to_string() == TestMd5Mesh.MD5MESH_SAMPLE
+        assert md5mesh.Md5Mesh.parse(
+            TestMd5Mesh.MD5MESH_SAMPLE).to_string() == TestMd5Mesh.MD5MESH_SAMPLE

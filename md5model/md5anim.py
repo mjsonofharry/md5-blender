@@ -28,7 +28,7 @@ class Hierarchy:
         return cls.parser().parse(data)
 
     def to_string(self):
-        return f'"{self.jointName}"\t{self.parentJointIndex} {self.flags} {self.startIndex}\t// {self.comment}'
+        return f'"{self.jointName}"\t{self.parentJointIndex} {self.flags} {self.startIndex}\t//{self.comment}'
 
 
 class Bound:
@@ -144,9 +144,10 @@ class Frame:
 
 
 class Md5Anim:
-    def __init__(self, version: int, commandline: str, frameRate: int, numAnimatedComponents: int, hierarchies: List[Hierarchy], bounds: List[Bound], baseframe: Frame, frames: List[Frame]):
+    def __init__(self, version: int, commandline: str, numJoints: int, frameRate: int, numAnimatedComponents: int, hierarchies: List[Hierarchy], bounds: List[Bound], baseframe: Frame, frames: List[Frame]):
         self.version = version
         self.commandline = commandline
+        self.numJoints = numJoints
         self.frameRate = frameRate
         self.numAnimatedComponents = numAnimatedComponents
         self.hierarchies = hierarchies
@@ -158,7 +159,18 @@ class Md5Anim:
     def parser(cls):
         @generate
         def p():
-            return None
+            version = yield keyValue('MD5Version', integer()) << spaces1()
+            commandline = yield keyValue('commandline', quoted()) << spaces1()
+            numFrames = yield keyValue('numFrames', integer()) << spaces1()
+            numJoints = yield keyValue('numJoints', integer()) << spaces1()
+            frameRate = yield keyValue('frameRate', integer()) << spaces1()
+            numAnimatedComponents = yield keyValue('numAnimatedComponents', integer()) << spaces1()
+            hierarchies = yield string('hierarchy') >> spaces1() >> string('{') >> spaces() >> many1(Hierarchy.parser()) << spaces() << string('}') << spaces1()
+            bounds = yield string('bounds') >> spaces1() >> string('{') >> spaces() >> many1(Bound.parser()) << spaces() << string('}') << spaces1()
+            baseframe = yield BaseFrame.parser() << spaces1()
+            frames = yield many1(Frame.parser()) << spaces()
+            assert len(frames) == numFrames
+            return cls(version=version, commandline=commandline, numJoints=numJoints, frameRate=frameRate, numAnimatedComponents=numAnimatedComponents, hierarchies=hierarchies, bounds=bounds, baseframe=baseframe, frames=frames)
         return p
 
     @classmethod
@@ -166,4 +178,22 @@ class Md5Anim:
         return cls.parser().parse(data)
 
     def to_string(self):
-        return ''
+        version = f'MD5Version {self.version}\n'
+        commandline = f'commandline "{self.commandline}"\n\n'
+
+        numFrames = f'numFrames {len(self.frames)}\n'
+        numJoints = f'numJoints {self.numJoints}\n'
+        frameRate = f'frameRate {self.frameRate}\n'
+        numAnimatedComponents = f'numAnimatedComponents {self.numAnimatedComponents}\n\n'
+
+        hierarchies = mkString([x.to_string() for x in self.hierarchies],
+                               start='hierarchy {\n\t', sep='\n\t', end='\n}\n\n')
+
+        bounds = mkString([x.to_string() for x in self.bounds],
+                          start='bounds {\n\t', sep='\n\t', end='\n}\n\n')
+
+        baseframe = f'{self.baseframe.to_string()}\n'
+
+        frames = mkString([x.to_string() for x in self.frames], sep='\n')
+
+        return version + commandline + numFrames + numJoints + frameRate + numAnimatedComponents + hierarchies + bounds + baseframe + frames

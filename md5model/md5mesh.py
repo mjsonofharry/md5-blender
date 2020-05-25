@@ -30,7 +30,7 @@ class Joint:
     def to_string(self):
         (x, y, z) = self.position
         (qx, qy, qz) = self.orientation
-        return f'"{self.name}"\t{self.parentIndex} ( {x} {y} {z} ) ( {qx} {qy} {qz} )\t\t// {self.comment}'
+        return f'"{self.name}"\t{self.parentIndex} ( {x} {y} {z} ) ( {qx} {qy} {qz} )\t\t//{self.comment}'
 
 
 class Vert:

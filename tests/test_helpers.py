@@ -41,14 +41,17 @@ class TestSlashyComment:
     def test_slashes(self):
         assert helpers.slashyComment().parse('//') == ''
 
+    def test_slasheswithspace(self):
+        assert helpers.slashyComment().parse('// ') == ' '
+
     def test_slasheswithspaces(self):
-        assert helpers.slashyComment().parse('  // ') == ''
+        assert helpers.slashyComment().parse('  //  ') == '  '
 
     def test_comment(self):
         assert helpers.slashyComment().parse('//comment') == 'comment'
 
     def test_commentwithspaces(self):
-        assert helpers.slashyComment().parse(' // comment') == 'comment'
+        assert helpers.slashyComment().parse(' // comment') == ' comment'
 
 
 class TestPositiveInteger:
