@@ -28,7 +28,7 @@ class Hierarchy:
         return cls.parser().parse(data)
 
     def to_string(self):
-        return ''
+        return f'"{self.jointName}"\t{self.parentJointIndex} {self.flags} {self.startIndex}\t// {self.comment}'
 
 
 class Bound:
@@ -50,7 +50,9 @@ class Bound:
         return cls.parser().parse(data)
 
     def to_string(self):
-        return ''
+        (minX, minY, minZ) = self.min
+        (maxX, maxY, maxZ) = self.max
+        return f'( {minX} {minY} {minZ} ) ( {maxX} {maxY} {maxZ} )'
 
 
 class BaseFramePart:
@@ -72,7 +74,9 @@ class BaseFramePart:
         return cls.parser().parse(data)
 
     def to_string(self):
-        return ''
+        (x, y, z) = self.position
+        (qx, qy, qz) = self.orientation
+        return f'( {x} {y} {z} ) ( {qx} {qy} {qz} )'
 
 
 class BaseFrame:
@@ -92,7 +96,8 @@ class BaseFrame:
         return cls.parser().parse(data)
 
     def to_string(self):
-        return ''
+        parts = [x.to_string() for x in self.parts]
+        return mkString(parts, start='baseframe {\n\t', sep='\n\t', end='\n}\n')
 
 
 class FramePart:
@@ -112,7 +117,7 @@ class FramePart:
         return cls.parser().parse(data)
 
     def to_string(self):
-        return ''
+        return mkString([str(x) for x in self.values], sep=' ')
 
 
 class Frame:
@@ -134,7 +139,8 @@ class Frame:
         return cls.parser().parse(data)
 
     def to_string(self):
-        return ''
+        parts = [x.to_string() for x in self.parts]
+        return mkString(parts, start=f'frame {self.index} ' + '{\n\t', sep='\n\t', end='\n}\n')
 
 
 class Md5Anim:
