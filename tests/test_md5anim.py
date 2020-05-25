@@ -1,5 +1,5 @@
 import pytest
-from .context import md5anim
+from md5model import md5anim
 
 
 class TestHierarchy:

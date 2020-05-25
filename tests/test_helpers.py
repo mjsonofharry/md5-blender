@@ -1,6 +1,6 @@
 import pytest
-from .context import helpers
-from .context import parsec
+from md5model import helpers
+from md5model import parsec
 
 
 class TestHelpers:

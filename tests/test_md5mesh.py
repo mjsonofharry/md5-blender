@@ -1,5 +1,5 @@
 import pytest
-from .context import md5mesh
+from md5model import md5mesh
 
 
 class TestJoint:
