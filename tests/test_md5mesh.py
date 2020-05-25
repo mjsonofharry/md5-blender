@@ -85,3 +85,51 @@ class TestWeight:
         weight = md5mesh.Weight(
             index=443, jointIndex=67, bias=0.178646, position=(-3.839379, 26.337955, 4.979258))
         assert weight.to_string() == '	weight 443 67 0.178646 ( -3.839379 26.337955 4.979258 )'
+
+class TestMesh:
+    def test_parse_match(self):
+        text = '''mesh {
+	// meshes: com1_eye
+	shader "models/monsters/zombie/commando/com1_eye"
+
+	numverts 8
+	vert 0 ( 0.004951 0.004951 ) 0 1
+	vert 1 ( 0.004951 0.99505 ) 1 1
+	vert 2 ( 0.995049 0.004951 ) 2 1
+	vert 3 ( 0.995049 0.99505 ) 3 1
+	vert 4 ( 0.004951 0.004951 ) 4 3
+	vert 5 ( 0.004951 0.99505 ) 7 2
+	vert 6 ( 0.995049 0.004951 ) 9 5
+	vert 7 ( 0.995049 0.99505 ) 14 3
+
+	numtris 4
+	tri 0 2 1 0
+	tri 1 3 1 2
+	tri 2 6 5 4
+	tri 3 7 5 6
+
+	numweights 17
+	weight 0 48 1.0 ( 2.455065 5.21452 0.565574 )
+	weight 1 48 1.0 ( 2.455065 5.409174 -0.528822 )
+	weight 2 48 1.0 ( 1.471064 5.723574 0.656117 )
+	weight 3 48 1.0 ( 1.471064 5.918229 -0.438279 )
+	weight 4 48 0.456828 ( -1.314141 5.837293 0.676343 )
+	weight 5 59 0.456828 ( -1.314141 -0.625642 0.259328 )
+	weight 6 52 0.086345 ( -0.386919 2.187816 -0.30181 )
+	weight 7 48 0.5 ( -1.314141 6.031948 -0.418053 )
+	weight 8 59 0.5 ( -1.314141 0.470846 0.076829 )
+	weight 9 48 0.331448 ( -2.280067 5.295721 0.580016 )
+	weight 10 59 0.302748 ( -2.280067 -0.715953 -0.28328 )
+	weight 11 54 0.065639 ( 2.837125 1.447748 2.811902 )
+	weight 12 53 0.089493 ( -2.234747 1.989634 -1.303629 )
+	weight 13 52 0.210672 ( -1.352844 2.097505 -0.844418 )
+	weight 14 48 0.467367 ( -2.280067 5.490375 -0.51438 )
+	weight 15 59 0.451175 ( -2.280067 0.380535 -0.465779 )
+	weight 16 52 0.081458 ( -1.352844 3.193994 -1.026917 )
+}'''
+        mesh = md5mesh.Mesh.parse(text)
+        assert mesh.comment == 'meshes: com1_eye'
+        assert mesh.shader == 'models/monsters/zombie/commando/com1_eye'
+        assert len(mesh.verts) == 8
+        assert len(mesh.tris) == 4
+        assert len(mesh.weights) == 17

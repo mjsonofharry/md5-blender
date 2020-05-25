@@ -6,6 +6,21 @@ def concatFn(x):
     return ''.join(x)
 
 
+def whitespace():
+    '''Parse whitespace only'''
+    return regex(r'\s*', re.MULTILINE)
+
+
+def notWhitespace():
+    '''Parse until whitespace'''
+    return regex(r'[^\s]+')
+
+
+def toLineEnd():
+    '''Parse to end of current line'''
+    return regex(r'[^\n]+')
+
+
 def quoted():
     '''Parse text between double-quotes'''
     return string('"') >> regex(r'[^\\"]+') << string('"')
