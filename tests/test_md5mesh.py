@@ -4,7 +4,16 @@ from .context import md5mesh
 
 class TestJoint:
     def test_parse_nocomment(self):
-        text = '\t"origin"\t-1 ( 0 0 0 ) ( 0 0 -0.7071067812 )\t\t// '
+        text = '\t"origin"\t-1 ( 0 0 0 ) ( 0 0 -0.7071067812 )\t\t//  '
+        joint = md5mesh.Joint.parse(text)
+        assert joint.name == 'origin'
+        assert joint.parentIndex == -1
+        assert joint.position == (0.0, 0.0, 0.0)
+        assert joint.orientation == (0.0, 0.0, -0.7071067812)
+        assert joint.comment == ''
+
+    def test_parse_noslashes(self):
+        text = '\t"origin"\t-1 ( 0 0 0 ) ( 0 0 -0.7071067812 )'
         joint = md5mesh.Joint.parse(text)
         assert joint.name == 'origin'
         assert joint.parentIndex == -1
@@ -46,7 +55,7 @@ class TestJoint:
 
 
 class TestVert:
-    def test_parse_match(self):
+    def test_parse(self):
         text = '\tvert 7 ( 0.574369 0.525882 ) 10 2'
         vert = md5mesh.Vert.parse(text)
         assert vert.index == 7
@@ -61,7 +70,7 @@ class TestVert:
 
 
 class TestTri:
-    def test_parse_match(self):
+    def test_parse(self):
         text = '\ttri 1019 707 690 691'
         tri = md5mesh.Tri.parse(text)
         assert tri.index == 1019
@@ -73,7 +82,7 @@ class TestTri:
 
 
 class TestWeight:
-    def test_parse_match(self):
+    def test_parse(self):
         text = '\tweight 443 67 0.178646 ( -3.839379 26.337955 4.979258 )'
         weight = md5mesh.Weight.parse(text)
         assert weight.index == 443
@@ -129,7 +138,7 @@ class TestMesh:
 }
 '''
 
-    def test_parse_match(self):
+    def test_parse(self):
         mesh = md5mesh.Mesh.parse(TestMesh.MESH_SAMPLE)
         assert mesh.comment == 'meshes: com1_eye'
         assert mesh.shader == 'models/monsters/zombie/commando/com1_eye'
@@ -189,7 +198,7 @@ mesh {
 }
 '''
 
-    def test_parse_match(self):
+    def test_parse(self):
         mesh = md5mesh.Md5Mesh.parse(TestMd5Mesh.MD5MESH_SAMPLE)
         assert mesh.version == 10
         assert mesh.commandline == 'mesh maps/fred/e3/chain/chain.mb -parent chaingunbone Lhand'

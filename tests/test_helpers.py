@@ -31,6 +31,26 @@ class TestSpaces1:
             (helpers.spaces1() >> parsec.string('no')).parse('no')
 
 
+class TestSlashyComment:
+    def test_nothing(self):
+        assert helpers.slashyComment().parse('') == ''
+
+    def test_spaces(self):
+        assert helpers.slashyComment().parse('   ') == ''
+
+    def test_slashes(self):
+        assert helpers.slashyComment().parse('//') == ''
+
+    def test_slasheswithspaces(self):
+        assert helpers.slashyComment().parse('  // ') == ''
+
+    def test_comment(self):
+        assert helpers.slashyComment().parse('//comment') == 'comment'
+
+    def test_commentwithspaces(self):
+        assert helpers.slashyComment().parse(' // comment') == 'comment'
+
+
 class TestPositiveInteger:
     def test_match(self):
         assert helpers.positiveInteger().parse('12345') == 12345

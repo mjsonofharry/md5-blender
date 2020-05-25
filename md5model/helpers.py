@@ -27,6 +27,16 @@ def toLineEnd():
     return regex(r'[^\n]+')
 
 
+def endOfLine():
+    '''Parse end of line'''
+    return regex(r'[\n]')
+
+
+def slashyComment():
+    '''Parse an optional comment in the form of `// this is a comment`'''
+    return ((spaces() >> string('//') >> toLineEnd()) ^ spaces()).parsecmap(lambda x: concatFn(x).strip())
+
+
 def quoted():
     '''Parse text between double-quotes'''
     return string('"') >> regex(r'[^\\"]+') << string('"')

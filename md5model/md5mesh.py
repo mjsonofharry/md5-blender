@@ -18,8 +18,8 @@ class Joint:
             name = yield spaces() >> quoted() << spaces1()
             parentIndex = yield integer() << spaces1()
             (x, y, z) = yield parens(sepBy1(number(), spaces1())) << spaces1()
-            (qx, qy, qz) = yield parens(sepBy1(number(), spaces1())) << spaces1()
-            comment = yield keyValue('//', (many(letter())).parsecmap(concatFn))
+            (qx, qy, qz) = yield parens(sepBy1(number(), spaces1()))
+            comment = yield slashyComment()
             return cls(name=name, parentIndex=parentIndex, position=(x, y, z), orientation=(qx, qy, qz), comment=comment)
         return p
 
