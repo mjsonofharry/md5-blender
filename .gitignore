@@ -127,3 +127,10 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# pytest
+.benchmarks
+.pytest_cache
+
+# output
+*.zip

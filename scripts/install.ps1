@@ -12,7 +12,6 @@ If (Test-Path $install_path) {
 }
 
 New-Item -Path $install_path -ItemType directory -Force
-Copy-Item -Path $sources_path\*.py -Destination $install_path -Force
-
 New-Item -Path $install_path\plugin -ItemType directory -Force
+Copy-Item -Path $sources_path\*.py -Destination $install_path -Force
 Copy-Item -Path $sources_path\plugin\*.py -Destination $install_path\plugin -Force
