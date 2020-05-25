@@ -140,47 +140,6 @@ class TestFrame:
         assert frame.to_string() == text
 
 
-class TestMd5Anim:
-    MD5ANIM_SAMPLE = '''MD5Version 10
-commandline "anim maps/fred/e3/chain/chain.mb -parent chaingunbone Lhand"
-
-numFrames 515
-numJoints 72
-frameRate 24
-numAnimatedComponents 102
-
-hierarchy {
-\t"origin"\t-1 3 0\t//  ( Tx Ty )
-\t"target"\t0 7 2\t// origin ( Tx Ty Tz )
-\t"waist"\t0 63 5\t// origin ( Tx Ty Tz Qx Qy Qz )
-}
-
-bounds {
-\t( -29.7891 -29.7891 191.4453 ) ( 17.2734 22.4375 275.6641 )
-\t( -29.6875 -29.6875 191.4453 ) ( 17.2734 22.4531 275.6641 )
-\t( -29.5938 -29.5938 191.4453 ) ( 17.2734 22.4688 275.6641 )
-\t( -29.4922 -29.4922 191.4453 ) ( 17.2734 22.4766 275.6641 )
-\t( -29.3906 -29.3906 191.4453 ) ( 17.2734 22.4844 275.6641 )
-}
-
-baseframe {
-\t( 0 0 0 ) ( -0.7071067812 0 0 )
-\t( -190.9219 66.2344 106.6172 ) ( 0 0 0 )
-\t( -0.4375 242.2109 0.5078 ) ( -0.0326106442 -0.938224635 0.0516446341 )
-
-frame 0 {
-\t0 0
-\t-190.9219 66.2344 106.6172
-\t-0.4375 242.2109 0.5078 -0.0326106442 -0.938224635 0.0516446341
-}
-}
-
-'''
-
-    def test_parse(self):
-        pass
-
-
 class TestHierarchy:
     def test_parse_nocomment(self):
         text = '"origin"\t-1 3 0\t//'
