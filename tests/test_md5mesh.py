@@ -88,8 +88,7 @@ class TestWeight:
 
 
 class TestMesh:
-    def test_parse_match(self):
-        text = '''mesh {
+    MESH_SAMPLE = '''mesh {
 \t// meshes: com1_eye
 \tshader "models/monsters/zombie/commando/com1_eye"
 
@@ -127,8 +126,11 @@ class TestMesh:
 \tweight 14 48 0.467367 ( -2.280067 5.490375 -0.51438 )
 \tweight 15 59 0.451175 ( -2.280067 0.380535 -0.465779 )
 \tweight 16 52 0.081458 ( -1.352844 3.193994 -1.026917 )
-}'''
-        mesh = md5mesh.Mesh.parse(text)
+}
+'''
+
+    def test_parse_match(self):
+        mesh = md5mesh.Mesh.parse(TestMesh.MESH_SAMPLE)
         assert mesh.comment == 'meshes: com1_eye'
         assert mesh.shader == 'models/monsters/zombie/commando/com1_eye'
         assert len(mesh.verts) == 8
@@ -136,47 +138,11 @@ class TestMesh:
         assert len(mesh.weights) == 17
 
     def test_tostring(self):
-        verts = [
-            md5mesh.Vert.parse('vert 0 ( 0.004951 0.004951 ) 0 1'),
-            md5mesh.Vert.parse('vert 1 ( 0.004951 0.99505 ) 1 1'),
-            md5mesh.Vert.parse('vert 2 ( 0.995049 0.004951 ) 2 1')
-        ]
-        tris = [
-            md5mesh.Tri.parse('tri 0 2 1 0'),
-            md5mesh.Tri.parse('tri 1 3 1 2')
-        ]
-        weights = [
-            md5mesh.Weight.parse('weight 0 48 1.0 ( 2.455065 5.21452 0.565574 )'),
-            md5mesh.Weight.parse('weight 1 48 1.0 ( 2.455065 5.409174 -0.528822 )'),
-            md5mesh.Weight.parse('weight 2 48 1.0 ( 1.471064 5.723574 0.656117 )'),
-            md5mesh.Weight.parse('weight 3 48 1.0 ( 1.471064 5.918229 -0.438279 )')
-        ]
-        mesh = md5mesh.Mesh(comment='meshes: com1_eye',
-                            shader='models/monsters/zombie/commando/com1_eye', verts=verts, tris=tris, weights=weights)
-        assert mesh.to_string() == '''mesh {
-\t// meshes: com1_eye
-\tshader "models/monsters/zombie/commando/com1_eye"
+        assert md5mesh.Mesh.parse(TestMesh.MESH_SAMPLE).to_string() == TestMesh.MESH_SAMPLE
 
-\tnumverts 3
-\tvert 0 ( 0.004951 0.004951 ) 0 1
-\tvert 1 ( 0.004951 0.99505 ) 1 1
-\tvert 2 ( 0.995049 0.004951 ) 2 1
-
-\tnumtris 2
-\ttri 0 2 1 0
-\ttri 1 3 1 2
-
-\tnumweights 4
-\tweight 0 48 1.0 ( 2.455065 5.21452 0.565574 )
-\tweight 1 48 1.0 ( 2.455065 5.409174 -0.528822 )
-\tweight 2 48 1.0 ( 1.471064 5.723574 0.656117 )
-\tweight 3 48 1.0 ( 1.471064 5.918229 -0.438279 )
-}
-'''
 
 class TestMd5Mesh:
-    def test_parse_match(self):
-        text = '''MD5Version 10
+    MD5MESH_SAMPLE = '''MD5Version 10
 commandline "mesh maps/fred/e3/chain/chain.mb -parent chaingunbone Lhand"
 
 numJoints 3
@@ -222,8 +188,13 @@ mesh {
 \tweight 0 39 1.0 ( 0.319793 2.069755 -3.67824 )
 }
 '''
-        mesh = md5mesh.Md5Mesh.parse(text)
+
+    def test_parse_match(self):
+        mesh = md5mesh.Md5Mesh.parse(TestMd5Mesh.MD5MESH_SAMPLE)
         assert mesh.version == 10
         assert mesh.commandline == 'mesh maps/fred/e3/chain/chain.mb -parent chaingunbone Lhand'
         assert len(mesh.joints) == 3
         assert len(mesh.meshes) == 2
+
+    def test_tostring(self):
+        assert md5mesh.Md5Mesh.parse(TestMd5Mesh.MD5MESH_SAMPLE).to_string() == TestMd5Mesh.MD5MESH_SAMPLE

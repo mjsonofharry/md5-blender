@@ -144,16 +144,20 @@ class Mesh:
         comment = f'\t// {self.comment}\n'
         shader = f'\tshader "{self.shader}"\n\n'
 
-        numverts = f'\tnumverts {len(self.verts)}\n\t'
-        verts = '\n\t'.join([x.to_string() for x in self.verts]) + '\n\n'
+        numverts = f'\tnumverts {len(self.verts)}'
+        verts = mkString([x.to_string() for x in self.verts],
+                         start='\n\t', sep='\n\t', end='\n\n')
 
-        numtris = f'\tnumtris {len(self.tris)}\n\t'
-        tris = '\n\t'.join([x.to_string() for x in self.tris]) + '\n\n'
+        numtris = f'\tnumtris {len(self.tris)}'
+        tris = mkString([x.to_string() for x in self.tris],
+                        start='\n\t', sep='\n\t', end='\n\n')
 
-        numweights = f'\tnumweights {len(self.weights)}\n\t'
-        weights = '\n\t'.join([x.to_string() for x in self.weights]) + '\n'
+        numweights = f'\tnumweights {len(self.weights)}'
+        weights = mkString([x.to_string() for x in self.weights],
+                           start='\n\t', sep='\n\t', end='\n')
 
         return 'mesh {\n' + comment + shader + numverts + verts + numtris + tris + numweights + weights + '}\n'
+
 
 class Md5Mesh:
     def __init__(self, version: int, commandline: str, joints: List[Joint], meshes: List[Mesh]):
@@ -176,10 +180,21 @@ class Md5Mesh:
             assert len(meshes) == numMeshes
             return Md5Mesh(version=version, commandline=commandline, joints=joints, meshes=meshes)
         return p
-    
+
     @classmethod
     def parse(cls, data: str):
         return cls.parser().parse(data)
 
     def to_string(self):
-        return ''
+        version = f'MD5Version {self.version}\n'
+        commandline = f'commandline "{self.commandline}"\n\n'
+
+        numJoints = f'numJoints {len(self.joints)}\n'
+        numMeshes = f'numMeshes {len(self.meshes)}\n\n'
+
+        joints = mkString([x.to_string() for x in self.joints],
+                          start='joints {\n\t', sep='\n\t', end='\n}\n\n')
+
+        meshes = mkString([x.to_string() for x in self.meshes], sep='\n')
+
+        return version + commandline + numJoints + numMeshes + joints + meshes

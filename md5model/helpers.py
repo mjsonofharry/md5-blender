@@ -1,9 +1,15 @@
+from typing import List
 from .parsec import *
 
 
-def concatFn(x):
+def concatFn(x: List):
     '''Convert list to string'''
     return ''.join(x)
+
+
+def mkString(x: List[str], start: str = '', sep: str = '', end: str = ''):
+    '''Join a list of strings with optional start, separator, and end strings'''
+    return start + sep.join(x) + end
 
 
 def whitespace():
