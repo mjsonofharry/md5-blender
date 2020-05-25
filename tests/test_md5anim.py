@@ -48,6 +48,9 @@ class TestHierarchy:
         assert hierarchy.startIndex == 24
         assert hierarchy.comment == 'Rloarm ( Qx Qy Qz )'
 
+    def test_tostring(self):
+        raise NotImplementedError
+
 
 class TestBound:
     def test_parse(self):
@@ -56,6 +59,9 @@ class TestBound:
         assert bound.min == (-29.7891, -29.7891, 191.4453)
         assert bound.max == (17.2734, 22.4375, 275.6641)
 
+    def test_tostring(self):
+        raise NotImplementedError
+
 
 class TestBaseFramePart:
     def test_parse(self):
@@ -63,6 +69,9 @@ class TestBaseFramePart:
         baseFramePart = md5anim.BaseFramePart.parse(text)
         assert baseFramePart.position == (-0.4375, 242.2109, 0.5078)
         assert baseFramePart.orientation == (-0.0326106442, -0.9382, 0.0516446)
+
+    def test_tostring(self):
+        raise NotImplementedError
 
 
 class TestBaseFrame:
@@ -76,12 +85,18 @@ class TestBaseFrame:
         baseFrame = md5anim.BaseFrame.parse(text)
         assert len(baseFrame.parts) == 3
 
+    def test_tostring(self):
+        raise NotImplementedError
+
 
 class TestFramePart:
     def test_parse(self):
         text = '1.8516 -11.9141 -0.9287547379 -0.2488'
         framePart = md5anim.FramePart.parse(text)
         assert framePart.values == [1.8516, -11.9141, -0.9287547379, -0.2488]
+
+    def test_tostring(self):
+        raise NotImplementedError
 
 
 class TestFrame:
@@ -104,3 +119,6 @@ class TestFrame:
         assert len(frame.parts[3].values) == 3
         assert len(frame.parts[4].values) == 4
         assert len(frame.parts[5].values) == 3
+
+    def test_tostring(self):
+        raise NotImplementedError
