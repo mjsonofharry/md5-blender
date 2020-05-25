@@ -173,3 +173,57 @@ class TestMesh:
 \tweight 3 48 1.0 ( 1.471064 5.918229 -0.438279 )
 }
 '''
+
+class TestMd5Mesh:
+    def test_parse_match(self):
+        text = '''MD5Version 10
+commandline "mesh maps/fred/e3/chain/chain.mb -parent chaingunbone Lhand"
+
+numJoints 3
+numMeshes 2
+
+joints {
+\t"origin"\t-1 ( 0 0 0 ) ( 0 0 -0.7071067812 )\t\t// 
+\t"target"\t0 ( 0 0 0 ) ( 0 0 -0.7071067812 )\t\t// origin
+\t"waist"\t0 ( -0.465389 0 51.328655 ) ( -0.5394861067 -0.5394861067 -0.4571156754 )\t\t// origin
+}
+
+mesh {
+\t// meshes: com1_d
+\tshader "models/monsters/zombie/commando/com1_d"
+
+\tnumverts 3
+\tvert 0 ( 0.53591 0.438716 ) 0 1
+\tvert 1 ( 0.50751 0.473978 ) 3 1
+\tvert 2 ( 0.511314 0.50808 ) 1 2
+
+\tnumtris 1
+\ttri 0 2 1 0
+
+\tnumweights 2
+\tweight 0 61 1.0 ( -3.078593 3.522633 -5.625685 )
+\tweight 1 61 0.8 ( -7.45092 1.8983 4.288566 )
+}
+
+mesh {
+\t// meshes: cgun
+\tshader "models/monsters/zombie/commando/cgun"
+
+\tnumverts 2
+\tvert 0 ( 0.738746 0.175496 ) 0 1
+\tvert 1 ( 0.728951 0.141262 ) 1 1
+
+\tnumtris 3
+\ttri 0 2 1 0
+\ttri 1 0 1 3
+\ttri 2 4 0 3
+
+\tnumweights 1
+\tweight 0 39 1.0 ( 0.319793 2.069755 -3.67824 )
+}
+'''
+        mesh = md5mesh.Md5Mesh.parse(text)
+        assert mesh.version == 10
+        assert mesh.commandline == 'mesh maps/fred/e3/chain/chain.mb -parent chaingunbone Lhand'
+        assert len(mesh.joints) == 3
+        assert len(mesh.meshes) == 2

@@ -154,3 +154,32 @@ class Mesh:
         weights = '\n\t'.join([x.to_string() for x in self.weights]) + '\n'
 
         return 'mesh {\n' + comment + shader + numverts + verts + numtris + tris + numweights + weights + '}\n'
+
+class Md5Mesh:
+    def __init__(self, version: int, commandline: str, joints: List[Joint], meshes: List[Mesh]):
+        self.version = version
+        self.commandline = commandline
+        self.joints = joints
+        self.meshes = meshes
+
+    @classmethod
+    def parser(cls):
+        @generate
+        def p():
+            version = yield keyValue('MD5Version', integer()) << spaces1()
+            commandline = yield keyValue('commandline', quoted()) << spaces1()
+            numJoints = yield keyValue('numJoints', integer()) << spaces1()
+            numMeshes = yield keyValue('numMeshes', integer()) << spaces1()
+            joints = yield string('joints') >> spaces1() >> string('{') >> spaces() >> many1(Joint.parser()) << spaces() << string('}') << spaces1()
+            assert len(joints) == numJoints
+            meshes = yield many1(Mesh.parser()) << spaces()
+            assert len(meshes) == numMeshes
+            return Md5Mesh(version=version, commandline=commandline, joints=joints, meshes=meshes)
+        return p
+    
+    @classmethod
+    def parse(cls, data: str):
+        return cls.parser().parse(data)
+
+    def to_string(self):
+        return ''
