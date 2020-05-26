@@ -32,6 +32,11 @@ def endOfLine():
     return regex(r'[\n]')
 
 
+def block(p):
+    '''Apply `p` between `{` and `}`'''
+    return spaces() >> string('{') >> spaces() >> p << spaces() << string('}') << spaces()
+
+
 def slashyComment():
     '''Parse an optional comment in the form of `// this is a comment`'''
     return ((spaces() >> string('//') >> toLineEnd()) ^ spaces().parsecmap(lambda xs: '')).parsecmap(concatFn)

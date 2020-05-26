@@ -29,7 +29,7 @@ def BaseFramePartParser():
 
 @generate
 def BaseFrameParser():
-    parts = yield string('baseframe') >> spaces() >> string('{') >> spaces() >> many1(BaseFramePartParser) << spaces() << string('}')
+    parts = yield keyValue('baseframe', block(many1(BaseFramePartParser)))
     return BaseFrame(parts=parts)
 
 
@@ -41,8 +41,8 @@ def FramePartParser():
 
 @generate
 def FrameParser():
-    index = yield keyValue('frame', integer()) << spaces() << string('{') << spaces()
-    parts = yield sepBy1(FramePartParser, spaces1()) << spaces() << string('}') << spaces()
+    index = yield keyValue('frame', integer())
+    parts = yield block(sepBy1(FramePartParser, spaces1()))
     return Frame(index=index, parts=parts)
 
 
@@ -54,9 +54,9 @@ def Md5AnimParser():
     numJoints = yield keyValue('numJoints', integer()) << spaces1()
     frameRate = yield keyValue('frameRate', integer()) << spaces1()
     numAnimatedComponents = yield keyValue('numAnimatedComponents', integer()) << spaces1()
-    hierarchies = yield string('hierarchy') >> spaces1() >> string('{') >> spaces() >> many1(HierarchyParser) << spaces() << string('}') << spaces1()
-    bounds = yield string('bounds') >> spaces1() >> string('{') >> spaces() >> many1(BoundParser) << spaces() << string('}') << spaces1()
-    baseframe = yield BaseFrameParser << spaces1()
+    hierarchies = yield keyValue('hierarchy', block(many1(HierarchyParser)))
+    bounds = yield keyValue('bounds', block(many1(BoundParser)))
+    baseframe = yield BaseFrameParser << spaces()
     frames = yield many1(FrameParser) << spaces()
     assert len(frames) == numFrames
     return Md5Anim(version=version, commandline=commandline, numJoints=numJoints, frameRate=frameRate, numAnimatedComponents=numAnimatedComponents, hierarchies=hierarchies, bounds=bounds, baseframe=baseframe, frames=frames)

@@ -60,7 +60,7 @@ def Md5MeshParser():
     commandline = yield keyValue('commandline', quoted()) << spaces1()
     numJoints = yield keyValue('numJoints', integer()) << spaces1()
     numMeshes = yield keyValue('numMeshes', integer()) << spaces1()
-    joints = yield string('joints') >> spaces1() >> string('{') >> spaces() >> many1(JointParser) << spaces() << string('}') << spaces1()
+    joints = yield keyValue('joints', block(many1(JointParser)))
     assert len(joints) == numJoints
     meshes = yield many1(MeshParser) << spaces()
     assert len(meshes) == numMeshes
