@@ -3,6 +3,65 @@ from .parsec import *
 from .helpers import *
 
 
+@generate
+def HierarchyParser():
+    jointName = yield spaces() >> quoted() << spaces1()
+    parentJointIndex = yield integer() << spaces1()
+    flags = yield integer() << spaces1()
+    startIndex = yield integer()
+    comment = yield slashyComment()
+    return Hierarchy(jointName=jointName, parentJointIndex=parentJointIndex, flags=flags, startIndex=startIndex, comment=comment)
+
+
+@generate
+def BoundParser():
+    (minX, minY, minZ) = yield spaces() >> parens(sepBy1(number(), spaces1())) << spaces()
+    (maxX, maxY, maxZ) = yield spaces() >> parens(sepBy1(number(), spaces1())) << spaces()
+    return Bound(min=(minX, minY, minZ), max=(maxX, maxY, maxZ))
+
+
+@generate
+def BaseFramePartParser():
+    (x, y, z) = yield spaces() >> parens(sepBy1(number(), spaces1())) << spaces()
+    (qx, qy, qz) = yield spaces() >> parens(sepBy1(number(), spaces1())) << spaces()
+    return BaseFramePart(position=(x, y, z), orientation=(qx, qy, qz))
+
+
+@generate
+def BaseFrameParser():
+    parts = yield string('baseframe') >> spaces() >> string('{') >> spaces() >> many1(BaseFramePartParser) << spaces() << string('}')
+    return BaseFrame(parts=parts)
+
+
+@generate
+def FramePartParser():
+    values = yield spaces() >> sepBy1(number(), space())
+    return FramePart(values=values)
+
+
+@generate
+def FrameParser():
+    index = yield keyValue('frame', integer()) << spaces() << string('{') << spaces()
+    parts = yield sepBy1(FramePartParser, spaces1()) << spaces() << string('}') << spaces()
+    return Frame(index=index, parts=parts)
+
+
+@generate
+def Md5AnimParser():
+    version = yield keyValue('MD5Version', integer()) << spaces1()
+    commandline = yield keyValue('commandline', quoted()) << spaces1()
+    numFrames = yield keyValue('numFrames', integer()) << spaces1()
+    numJoints = yield keyValue('numJoints', integer()) << spaces1()
+    frameRate = yield keyValue('frameRate', integer()) << spaces1()
+    numAnimatedComponents = yield keyValue('numAnimatedComponents', integer()) << spaces1()
+    hierarchies = yield string('hierarchy') >> spaces1() >> string('{') >> spaces() >> many1(HierarchyParser) << spaces() << string('}') << spaces1()
+    bounds = yield string('bounds') >> spaces1() >> string('{') >> spaces() >> many1(BoundParser) << spaces() << string('}') << spaces1()
+    baseframe = yield BaseFrameParser << spaces1()
+    frames = yield many1(FrameParser) << spaces()
+    assert len(frames) == numFrames
+    return Md5Anim(version=version, commandline=commandline, numJoints=numJoints, frameRate=frameRate, numAnimatedComponents=numAnimatedComponents, hierarchies=hierarchies, bounds=bounds, baseframe=baseframe, frames=frames)
+
+
 class Hierarchy:
     def __init__(self, jointName: str, parentJointIndex: int, flags: int, startIndex: int, comment: str):
         self.jointName = jointName
@@ -12,20 +71,8 @@ class Hierarchy:
         self.comment = comment
 
     @classmethod
-    def parser(cls):
-        @generate
-        def p():
-            jointName = yield spaces() >> quoted() << spaces1()
-            parentJointIndex = yield integer() << spaces1()
-            flags = yield integer() << spaces1()
-            startIndex = yield integer()
-            comment = yield slashyComment()
-            return cls(jointName=jointName, parentJointIndex=parentJointIndex, flags=flags, startIndex=startIndex, comment=comment)
-        return p
-
-    @classmethod
     def parse(cls, data: str):
-        return cls.parser().parse(data)
+        return HierarchyParser.parse(data)
 
     def to_string(self):
         return f'"{self.jointName}"\t{self.parentJointIndex} {self.flags} {self.startIndex}\t//{self.comment}'
@@ -37,17 +84,8 @@ class Bound:
         self.max = max
 
     @classmethod
-    def parser(cls):
-        @generate
-        def p():
-            (minX, minY, minZ) = yield spaces() >> parens(sepBy1(number(), spaces1())) << spaces()
-            (maxX, maxY, maxZ) = yield spaces() >> parens(sepBy1(number(), spaces1())) << spaces()
-            return cls(min=(minX, minY, minZ), max=(maxX, maxY, maxZ))
-        return p
-
-    @classmethod
     def parse(cls, data: str):
-        return cls.parser().parse(data)
+        return BoundParser.parse(data)
 
     def to_string(self):
         (minX, minY, minZ) = self.min
@@ -61,17 +99,8 @@ class BaseFramePart:
         self.orientation = orientation
 
     @classmethod
-    def parser(cls):
-        @generate
-        def p():
-            (x, y, z) = yield spaces() >> parens(sepBy1(number(), spaces1())) << spaces()
-            (qx, qy, qz) = yield spaces() >> parens(sepBy1(number(), spaces1())) << spaces()
-            return cls(position=(x, y, z), orientation=(qx, qy, qz))
-        return p
-
-    @classmethod
     def parse(cls, data: str):
-        return cls.parser().parse(data)
+        return BaseFramePartParser.parse(data)
 
     def to_string(self):
         (x, y, z) = self.position
@@ -84,16 +113,8 @@ class BaseFrame:
         self.parts = parts
 
     @classmethod
-    def parser(cls):
-        @generate
-        def p():
-            parts = yield string('baseframe') >> spaces() >> string('{') >> spaces() >> many1(BaseFramePart.parser()) << spaces() << string('}')
-            return cls(parts=parts)
-        return p
-
-    @classmethod
     def parse(cls, data: str):
-        return cls.parser().parse(data)
+        return BaseFrameParser.parse(data)
 
     def to_string(self):
         parts = [x.to_string() for x in self.parts]
@@ -105,16 +126,8 @@ class FramePart:
         self.values = values
 
     @classmethod
-    def parser(cls):
-        @generate
-        def p():
-            values = yield spaces() >> sepBy1(number(), space())
-            return cls(values=values)
-        return p
-
-    @classmethod
     def parse(cls, data: str):
-        return cls.parser().parse(data)
+        return FramePartParser.parse(data)
 
     def to_string(self):
         return mkString([str(x) for x in self.values], sep=' ')
@@ -126,17 +139,8 @@ class Frame:
         self.parts = parts
 
     @classmethod
-    def parser(cls):
-        @generate
-        def p():
-            index = yield keyValue('frame', integer()) << spaces() << string('{') << spaces()
-            parts = yield sepBy1(FramePart.parser(), spaces1()) << spaces() << string('}') << spaces()
-            return cls(index=index, parts=parts)
-        return p
-
-    @classmethod
     def parse(cls, data: str):
-        return cls.parser().parse(data)
+        return FrameParser.parse(data)
 
     def to_string(self):
         parts = [x.to_string() for x in self.parts]
@@ -156,26 +160,8 @@ class Md5Anim:
         self.frames = frames
 
     @classmethod
-    def parser(cls):
-        @generate
-        def p():
-            version = yield keyValue('MD5Version', integer()) << spaces1()
-            commandline = yield keyValue('commandline', quoted()) << spaces1()
-            numFrames = yield keyValue('numFrames', integer()) << spaces1()
-            numJoints = yield keyValue('numJoints', integer()) << spaces1()
-            frameRate = yield keyValue('frameRate', integer()) << spaces1()
-            numAnimatedComponents = yield keyValue('numAnimatedComponents', integer()) << spaces1()
-            hierarchies = yield string('hierarchy') >> spaces1() >> string('{') >> spaces() >> many1(Hierarchy.parser()) << spaces() << string('}') << spaces1()
-            bounds = yield string('bounds') >> spaces1() >> string('{') >> spaces() >> many1(Bound.parser()) << spaces() << string('}') << spaces1()
-            baseframe = yield BaseFrame.parser() << spaces1()
-            frames = yield many1(Frame.parser()) << spaces()
-            assert len(frames) == numFrames
-            return cls(version=version, commandline=commandline, numJoints=numJoints, frameRate=frameRate, numAnimatedComponents=numAnimatedComponents, hierarchies=hierarchies, bounds=bounds, baseframe=baseframe, frames=frames)
-        return p
-
-    @classmethod
     def parse(cls, data: str):
-        return cls.parser().parse(data)
+        return Md5AnimParser.parse(data)
 
     def to_string(self):
         version = f'MD5Version {self.version}\n'

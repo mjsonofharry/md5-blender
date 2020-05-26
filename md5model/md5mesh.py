@@ -3,6 +3,70 @@ from .parsec import *
 from .helpers import *
 
 
+@generate
+def JointParser():
+    name = yield spaces() >> quoted() << spaces1()
+    parentIndex = yield integer() << spaces1()
+    (x, y, z) = yield parens(sepBy1(number(), spaces1())) << spaces1()
+    (qx, qy, qz) = yield parens(sepBy1(number(), spaces1()))
+    comment = yield slashyComment()
+    return Joint(name=name, parentIndex=parentIndex, position=(x, y, z), orientation=(qx, qy, qz), comment=comment)
+
+
+@generate
+def VertParser():
+    index = yield spaces() >> keyValue('vert', integer()) << spaces1()
+    (u, v) = yield parens(sepBy1(number(), spaces1())) << spaces1()
+    weightStart = yield integer() << spaces1()
+    weightCount = yield integer() << spaces()
+    return Vert(index=index, uv=(u, v), weightStart=weightStart, weightCount=weightCount)
+
+
+@generate
+def WeightParser():
+    index = yield spaces() >> keyValue('weight', integer()) << spaces1()
+    jointIndex = yield integer() << spaces1()
+    bias = yield number() << spaces1()
+    (x, y, z) = yield parens(sepBy1(number(), spaces1())) << spaces()
+    return Weight(index=index, jointIndex=jointIndex, bias=bias, position=(x, y, z))
+
+
+@generate
+def TriParser():
+    index = yield spaces() >> keyValue('tri', integer()) << spaces1()
+    (v1, v2, v3) = yield sepBy1(integer(), spaces1()) << spaces()
+    return Tri(index=index, verts=(v1, v2, v3))
+
+
+@generate
+def MeshParser():
+    comment = yield string('mesh') >> spaces1() >> string('{') >> spaces1() >> keyValue('//', toLineEnd()) << spaces1()
+    shader = yield keyValue('shader', quoted()) << spaces1()
+    numverts = yield keyValue('numverts', integer()) << spaces()
+    verts = yield many1(VertParser) << spaces()
+    assert len(verts) == numverts
+    numtris = yield keyValue('numtris', integer()) << spaces()
+    tris = yield many1(TriParser) << spaces()
+    assert len(tris) == numtris
+    numweights = yield keyValue('numweights', integer()) << spaces()
+    weights = yield many1(WeightParser) << spaces() << string('}') << spaces()
+    assert len(weights) == numweights
+    return Mesh(comment=comment, shader=shader, verts=verts, tris=tris, weights=weights)
+
+
+@generate
+def Md5MeshParser():
+    version = yield keyValue('MD5Version', integer()) << spaces1()
+    commandline = yield keyValue('commandline', quoted()) << spaces1()
+    numJoints = yield keyValue('numJoints', integer()) << spaces1()
+    numMeshes = yield keyValue('numMeshes', integer()) << spaces1()
+    joints = yield string('joints') >> spaces1() >> string('{') >> spaces() >> many1(JointParser) << spaces() << string('}') << spaces1()
+    assert len(joints) == numJoints
+    meshes = yield many1(MeshParser) << spaces()
+    assert len(meshes) == numMeshes
+    return Md5Mesh(version=version, commandline=commandline, joints=joints, meshes=meshes)
+
+
 class Joint:
     def __init__(self, name: str, parentIndex: int, position: Tuple[float, float, float], orientation: Tuple[float, float, float, float], comment: str):
         self.name = name
@@ -12,20 +76,8 @@ class Joint:
         self.comment = comment
 
     @classmethod
-    def parser(cls):
-        @generate
-        def p():
-            name = yield spaces() >> quoted() << spaces1()
-            parentIndex = yield integer() << spaces1()
-            (x, y, z) = yield parens(sepBy1(number(), spaces1())) << spaces1()
-            (qx, qy, qz) = yield parens(sepBy1(number(), spaces1()))
-            comment = yield slashyComment()
-            return cls(name=name, parentIndex=parentIndex, position=(x, y, z), orientation=(qx, qy, qz), comment=comment)
-        return p
-
-    @classmethod
     def parse(cls, data: str):
-        return cls.parser().parse(data)
+        return JointParser.parse(data)
 
     def to_string(self):
         (x, y, z) = self.position
@@ -41,19 +93,8 @@ class Vert:
         self.weightCount = weightCount
 
     @classmethod
-    def parser(cls):
-        @generate
-        def p():
-            index = yield spaces() >> keyValue('vert', integer()) << spaces1()
-            (u, v) = yield parens(sepBy1(number(), spaces1())) << spaces1()
-            weightStart = yield integer() << spaces1()
-            weightCount = yield integer() << spaces()
-            return cls(index=index, uv=(u, v), weightStart=weightStart, weightCount=weightCount)
-        return p
-
-    @classmethod
     def parse(cls, data: str):
-        return cls.parser().parse(data)
+        return VertParser.parse(data)
 
     def to_string(self):
         (u, v) = self.uv
@@ -66,17 +107,8 @@ class Tri:
         self.verts = verts
 
     @classmethod
-    def parser(cls):
-        @generate
-        def p():
-            index = yield spaces() >> keyValue('tri', integer()) << spaces1()
-            (v1, v2, v3) = yield sepBy1(integer(), spaces1()) << spaces()
-            return cls(index=index, verts=(v1, v2, v3))
-        return p
-
-    @classmethod
     def parse(cls, data: str):
-        return cls.parser().parse(data)
+        return TriParser.parse(data)
 
     def to_string(self):
         (v1, v2, v3) = self.verts
@@ -91,19 +123,8 @@ class Weight:
         self.position = position
 
     @classmethod
-    def parser(cls):
-        @generate
-        def p():
-            index = yield spaces() >> keyValue('weight', integer()) << spaces1()
-            jointIndex = yield integer() << spaces1()
-            bias = yield number() << spaces1()
-            (x, y, z) = yield parens(sepBy1(number(), spaces1())) << spaces()
-            return cls(index=index, jointIndex=jointIndex, bias=bias, position=(x, y, z))
-        return p
-
-    @classmethod
     def parse(cls, data: str):
-        return cls.parser().parse(data)
+        return WeightParser.parse(data)
 
     def to_string(self):
         (x, y, z) = self.position
@@ -119,26 +140,8 @@ class Mesh:
         self.weights = weights
 
     @classmethod
-    def parser(cls):
-        @generate
-        def p():
-            comment = yield string('mesh') >> spaces1() >> string('{') >> spaces1() >> keyValue('//', toLineEnd()) << spaces1()
-            shader = yield keyValue('shader', quoted()) << spaces1()
-            numverts = yield keyValue('numverts', integer()) << spaces()
-            verts = yield many1(Vert.parser()) << spaces()
-            assert len(verts) == numverts
-            numtris = yield keyValue('numtris', integer()) << spaces()
-            tris = yield many1(Tri.parser()) << spaces()
-            assert len(tris) == numtris
-            numweights = yield keyValue('numweights', integer()) << spaces()
-            weights = yield many1(Weight.parser()) << spaces() << string('}') << spaces()
-            assert len(weights) == numweights
-            return Mesh(comment=comment, shader=shader, verts=verts, tris=tris, weights=weights)
-        return p
-
-    @classmethod
     def parse(cls, data: str):
-        return cls.parser().parse(data)
+        return MeshParser.parse(data)
 
     def to_string(self):
         comment = f'\t// {self.comment}\n'
@@ -167,23 +170,8 @@ class Md5Mesh:
         self.meshes = meshes
 
     @classmethod
-    def parser(cls):
-        @generate
-        def p():
-            version = yield keyValue('MD5Version', integer()) << spaces1()
-            commandline = yield keyValue('commandline', quoted()) << spaces1()
-            numJoints = yield keyValue('numJoints', integer()) << spaces1()
-            numMeshes = yield keyValue('numMeshes', integer()) << spaces1()
-            joints = yield string('joints') >> spaces1() >> string('{') >> spaces() >> many1(Joint.parser()) << spaces() << string('}') << spaces1()
-            assert len(joints) == numJoints
-            meshes = yield many1(Mesh.parser()) << spaces()
-            assert len(meshes) == numMeshes
-            return Md5Mesh(version=version, commandline=commandline, joints=joints, meshes=meshes)
-        return p
-
-    @classmethod
     def parse(cls, data: str):
-        return cls.parser().parse(data)
+        return Md5MeshParser.parse(data)
 
     def to_string(self):
         version = f'MD5Version {self.version}\n'
