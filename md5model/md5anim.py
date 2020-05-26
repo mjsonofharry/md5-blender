@@ -1,6 +1,6 @@
 from typing import Tuple, List
-from md5model.parsec import *
-from md5model.helpers import *
+from .parsec import *
+from .helpers import *
 
 
 class Hierarchy:

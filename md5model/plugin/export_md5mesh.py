@@ -1,2 +1,2 @@
 import bpy
-from ...md5model import md5mesh
+from .. import md5mesh

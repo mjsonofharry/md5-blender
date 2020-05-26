@@ -28,7 +28,8 @@ class ImportMd5Mesh(bpy.types.Operator, bpy_extras.io_utils.ImportHelper):
         pass
 
     def execute(self, context):
-        pass
+        from . import import_md5mesh
+        return import_md5mesh.load(self, context, self.filepath)
 
 
 class ImportMd5Anim(bpy.types.Operator, bpy_extras.io_utils.ImportHelper):
