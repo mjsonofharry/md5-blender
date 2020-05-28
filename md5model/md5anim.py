@@ -74,7 +74,7 @@ class Hierarchy:
     def parse(cls, data: str):
         return HierarchyParser.parse(data)
 
-    def to_string(self):
+    def to_string(self) -> str:
         return f'"{self.jointName}"\t{self.parentJointIndex} {self.flags} {self.startIndex}\t//{self.comment}'
 
 
@@ -87,7 +87,7 @@ class Bound:
     def parse(cls, data: str):
         return BoundParser.parse(data)
 
-    def to_string(self):
+    def to_string(self) -> str:
         (minX, minY, minZ) = self.min
         (maxX, maxY, maxZ) = self.max
         return f'( {minX} {minY} {minZ} ) ( {maxX} {maxY} {maxZ} )'
@@ -102,7 +102,7 @@ class BaseFramePart:
     def parse(cls, data: str):
         return BaseFramePartParser.parse(data)
 
-    def to_string(self):
+    def to_string(self) -> str:
         (x, y, z) = self.position
         (qx, qy, qz) = self.orientation
         return f'( {x} {y} {z} ) ( {qx} {qy} {qz} )'
@@ -116,7 +116,7 @@ class BaseFrame:
     def parse(cls, data: str):
         return BaseFrameParser.parse(data)
 
-    def to_string(self):
+    def to_string(self) -> str:
         parts = [x.to_string() for x in self.parts]
         return mkString(parts, start='baseframe {\n\t', sep='\n\t', end='\n}\n')
 
@@ -129,7 +129,7 @@ class FramePart:
     def parse(cls, data: str):
         return FramePartParser.parse(data)
 
-    def to_string(self):
+    def to_string(self) -> str:
         return mkString([str(x) for x in self.values], sep=' ')
 
 
@@ -142,7 +142,7 @@ class Frame:
     def parse(cls, data: str):
         return FrameParser.parse(data)
 
-    def to_string(self):
+    def to_string(self) -> str:
         parts = [x.to_string() for x in self.parts]
         return mkString(parts, start=f'frame {self.index} ' + '{\n\t', sep='\n\t', end='\n}\n')
 
@@ -163,7 +163,7 @@ class Md5Anim:
     def parse(cls, data: str):
         return Md5AnimParser.parse(data)
 
-    def to_string(self):
+    def to_string(self) -> str:
         version = f'MD5Version {self.version}\n'
         commandline = f'commandline "{self.commandline}"\n\n'
 

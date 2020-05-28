@@ -79,7 +79,7 @@ class Joint:
     def parse(cls, data: str):
         return JointParser.parse(data)
 
-    def to_string(self):
+    def to_string(self) -> str:
         (x, y, z) = self.position
         (qx, qy, qz) = self.orientation
         return f'"{self.name}"\t{self.parentIndex} ( {x} {y} {z} ) ( {qx} {qy} {qz} )\t\t//{self.comment}'
@@ -96,7 +96,7 @@ class Vert:
     def parse(cls, data: str):
         return VertParser.parse(data)
 
-    def to_string(self):
+    def to_string(self) -> str:
         (u, v) = self.uv
         return f'vert {self.index} ( {u} {v} ) {self.weightStart} {self.weightCount}'
 
@@ -110,7 +110,7 @@ class Tri:
     def parse(cls, data: str):
         return TriParser.parse(data)
 
-    def to_string(self):
+    def to_string(self) -> str:
         (v1, v2, v3) = self.verts
         return f'tri {self.index} {v1} {v2} {v3}'
 
@@ -126,7 +126,7 @@ class Weight:
     def parse(cls, data: str):
         return WeightParser.parse(data)
 
-    def to_string(self):
+    def to_string(self) -> str:
         (x, y, z) = self.position
         return f'weight {self.index} {self.jointIndex} {self.bias} ( {x} {y} {z} )'
 
@@ -143,7 +143,7 @@ class Mesh:
     def parse(cls, data: str):
         return MeshParser.parse(data)
 
-    def to_string(self):
+    def to_string(self) -> str:
         comment = f'\t// {self.comment}\n'
         shader = f'\tshader "{self.shader}"\n\n'
 
@@ -173,7 +173,7 @@ class Md5Mesh:
     def parse(cls, data: str):
         return Md5MeshParser.parse(data)
 
-    def to_string(self):
+    def to_string(self) -> str:
         version = f'MD5Version {self.version}\n'
         commandline = f'commandline "{self.commandline}"\n\n'
 
