@@ -1,4 +1,7 @@
+import functools
+import math
 from typing import Tuple, List
+from .implicits import implicits
 from .parsec import *
 from .helpers import *
 
@@ -67,6 +70,15 @@ def Md5MeshParser():
     return Md5Mesh(version=version, commandline=commandline, joints=joints, meshes=meshes)
 
 
+def compute_w(qx: float, qy: float, qz: float) -> float:
+    '''Compute `w` for a unit quaternion (reference: http://tfc.duke.free.fr/coding/md5-specs-en.html)'''
+    t = 1.0 - (qx * qx) - (qy * qy) - (qz * qz)
+    if t < 0.0:
+        return 0.0
+    else:
+        return -math.sqrt(t)
+
+
 class Joint:
     def __init__(self, name: str, parentIndex: int, position: Tuple[float, float, float], orientation: Tuple[float, float, float, float], comment: str):
         self.name = name
@@ -83,6 +95,17 @@ class Joint:
         (x, y, z) = self.position
         (qx, qy, qz) = self.orientation
         return f'"{self.name}"\t{self.parentIndex} ( {x} {y} {z} ) ( {qx} {qy} {qz} )\t\t//{self.comment}'
+
+    @property
+    @implicits('mathutils')
+    @functools.lru_cache(maxsize=256)
+    def matrix(self, mathutils):
+        print(f'{self.name}: Cache miss!')
+        translation = mathutils.Matrix.Translation(self.position)
+        (qx, qy, qz) = self.orientation
+        qw = compute_w(qx, qy, qz)
+        orientation = -mathutils.Quaternion((qw, qx, qy, qz))
+        return translation @ orientation.to_matrix().to_4x4()
 
 
 class Vert:
