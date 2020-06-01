@@ -3,7 +3,7 @@ import functools
 import math
 import mathutils
 import os
-from typing import Tuple, List, Optional
+from typing import Tuple, List
 from .. import md5mesh
 
 
