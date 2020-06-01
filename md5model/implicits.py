@@ -37,14 +37,18 @@ def implicits(*implicit_arg_names):
     def decorator(func):
         defaults = _default_args(func)
         def wrapper(*args, **kwargs):
-            caller_locals = inspect.currentframe().f_back.f_locals
+            caller = inspect.currentframe().f_back
+            caller_locals = caller.f_locals
+            caller_globals = caller.f_globals
             for name in implicit_arg_names:
                 if name in kwargs:
                     continue
                 elif name in caller_locals:
                     kwargs[name] = caller_locals[name]
+                elif name in caller_globals:
+                    kwargs[name] = caller_globals[name]
                 elif name not in defaults:
-                    raise NameError("implicit name '{}' is not defined in caller's locals".format(name))
+                    raise NameError(f"implicit name '{name}' is not defined in caller's locals or globals")
             return func(*args, **kwargs)
         return wrapper
     return decorator
