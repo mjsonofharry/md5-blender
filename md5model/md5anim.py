@@ -15,15 +15,15 @@ def HierarchyParser():
 
 @generate
 def BoundParser():
-    (minX, minY, minZ) = yield spaces() >> parens(sepBy1(number(), spaces1())) << spaces()
-    (maxX, maxY, maxZ) = yield spaces() >> parens(sepBy1(number(), spaces1())) << spaces()
+    (minX, minY, minZ) = yield spaces() >> parens(sequence(number(), 3) << spaces()) << spaces()
+    (maxX, maxY, maxZ) = yield spaces() >> parens(sequence(number(), 3) << spaces()) << spaces()
     return Bound(min=(minX, minY, minZ), max=(maxX, maxY, maxZ))
 
 
 @generate
 def BaseFramePartParser():
-    (x, y, z) = yield spaces() >> parens(sepBy1(number(), spaces1())) << spaces()
-    (qx, qy, qz) = yield spaces() >> parens(sepBy1(number(), spaces1())) << spaces()
+    (x, y, z) = yield spaces() >> parens(sequence(number(), 3) << spaces()) << spaces()
+    (qx, qy, qz) = yield spaces() >> parens(sequence(number(), 3) << spaces()) << spaces()
     return BaseFramePart(position=(x, y, z), orientation=(qx, qy, qz))
 
 

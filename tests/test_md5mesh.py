@@ -150,7 +150,7 @@ class TestMesh:
 
     def test_parse(self):
         mesh = md5mesh.Mesh.parse(TestMesh.MESH_SAMPLE)
-        assert mesh.comment == 'meshes: com1_eye'
+        assert mesh.comment == ' meshes: com1_eye'
         assert mesh.shader == 'models/monsters/zombie/commando/com1_eye'
         assert len(mesh.verts) == 8
         assert len(mesh.tris) == 4

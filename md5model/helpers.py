@@ -95,3 +95,8 @@ def decimal():
 def number():
     '''Parse any decimal or integer'''
     return decimal() ^ integer()
+
+
+def sequence(p, n):
+    '''Parse `n` occurrences of `p` with space delimiters'''
+    return count(p << spaces1(), n)

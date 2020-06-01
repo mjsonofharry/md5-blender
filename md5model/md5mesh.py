@@ -10,8 +10,8 @@ from .helpers import *
 def JointParser():
     name = yield spaces() >> quoted() << spaces1()
     parentIndex = yield integer() << spaces1()
-    (x, y, z) = yield parens(sepBy1(number(), spaces1())) << spaces1()
-    (qx, qy, qz) = yield parens(sepBy1(number(), spaces1()))
+    (x, y, z) = yield parens(sequence(number(), 3)) << spaces()
+    (qx, qy, qz) = yield parens(sequence(number(), 3)) << spaces()
     comment = yield slashyComment()
     return Joint(name=name, parentIndex=parentIndex, position=(x, y, z), orientation=(qx, qy, qz), comment=comment)
 
@@ -43,7 +43,7 @@ def TriParser():
 
 @generate
 def MeshParser():
-    comment = yield string('mesh') >> spaces1() >> string('{') >> spaces1() >> keyValue('//', toLineEnd()) << spaces1()
+    comment = yield string('mesh') >> spaces1() >> string('{') >> slashyComment() << spaces1()
     shader = yield keyValue('shader', quoted()) << spaces1()
     numverts = yield keyValue('numverts', integer()) << spaces()
     verts = yield many1(VertParser) << spaces()
@@ -175,7 +175,7 @@ class Mesh:
 
     @property
     def to_string(self) -> str:
-        comment = f'\t// {self.comment}\n'
+        comment = f'\t//{self.comment}\n'
         shader = f'\tshader "{self.shader}"\n\n'
 
         numverts = f'\tnumverts {len(self.verts)}'
