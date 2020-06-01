@@ -47,23 +47,23 @@ def load(operator, context, path):
         bone.layers[1] = True
 
     for mesh in md5_mesh.meshes:
+        def apply_weight_to_position(acc: mathutils.Vector, weight: md5mesh.Weight):
+            '''Adjust a position using a weight and its joint (reference: http://tfc.duke.free.fr/coding/md5-specs-en.html'''
+            joint = md5_mesh.joints[weight.jointIndex]
+            return acc + ((joint.matrix @ mathutils.Vector(weight.position)) * weight.bias)
         def compute_vert_position(vert: md5mesh.Vert):
             '''Compute the absolute position of a single vertex (reference: http://tfc.duke.free.fr/coding/md5-specs-en.html)'''
-            def apply_weight_to_position(acc: mathutils.Vector, weight: md5mesh.Weight):
-                '''Adjust a position vector using a single weight (reference: http://tfc.duke.free.fr/coding/md5-specs-en.html'''
-                joint = md5_mesh.joints[weight.jointIndex]
-                return acc + ((joint.matrix @ mathutils.Vector(weight.position)) * weight.bias)
             weights = mesh.weights[vert.weightStart:vert.weightEnd]
-            weighted_position = functools.reduce(apply_weight_to_position, [mathutils.Vector((0.0, 0.0, 0.0)), *weights])
-            return weighted_position
-        verts = [compute_vert_position(vert) for vert in mesh.verts]
+            return functools.reduce(apply_weight_to_position, [mathutils.Vector((0.0, 0.0, 0.0)), *weights])
 
+        verts = [compute_vert_position(vert) for vert in mesh.verts]
         edges = []
         faces = [x.verts for x in mesh.tris]
 
         mesh_name = f'{mesh.comment}'.strip()
         mesh_data = bpy.data.meshes.new(mesh_name)
         mesh_data.from_pydata(verts, edges, faces)
+        mesh_data.flip_normals()
         mesh_object = bpy.data.objects.new(mesh_name, object_data=mesh_data)
         collection.objects.link(mesh_object)
 
