@@ -1,7 +1,7 @@
 import bpy
-import bmesh
+import functools
 import math
-import mathutils as mu
+import mathutils
 import os
 from typing import Tuple, List, Optional
 from .. import md5mesh
@@ -13,8 +13,6 @@ BONE_LENGTH = 5.0
 
 
 def load(operator, context, path):
-    mathutils = mu
-
     name = os.path.splitext(os.path.basename(path))[0]
     f = open(path, 'r', encoding='utf-8')
     data = f.read()
@@ -49,20 +47,28 @@ def load(operator, context, path):
         bone.layers[1] = True
 
     for mesh in md5_mesh.meshes:
-        bm = bmesh.new()
+        def compute_vert_position(vert):
+            def apply_weight_to_position(acc, weight):
+                joint = md5_mesh.joints[weight.jointIndex]
+                return acc + ((mathutils.Vector(joint.position) + (joint.matrix.to_quaternion() @ mathutils.Vector(weight.position))) * weight.bias)
+            weights = mesh.weights[vert.weightStart:vert.weightEnd]
+            print(weights)
+            weighted_position = functools.reduce(apply_weight_to_position, [mathutils.Vector((0.0, 0.0, 0.0)), *weights])
+            return weighted_position
+        verts = [compute_vert_position(vert) for vert in mesh.verts]
 
-        for vert in md5_mesh.verts:
-            pass
+        edges = []
+        faces = []
 
-        mesh_name = f'{mesh.comment} Mesh'.strip()
-        mesh_data = bpy.data.objects.new(mesh_name)
-        bm.to_mesh(mesh_data)
-        bm.free()
+        mesh_name = f'{mesh.comment}'.strip()
+        mesh_data = bpy.data.meshes.new(mesh_name)
+        mesh_data.from_pydata(verts, edges, faces)
         mesh_object = bpy.data.objects.new(mesh_name, object_data=mesh_data)
+        collection.objects.link(mesh_object)
 
         # ???
-        modifier = mesh.modifiers.new(name=mesh_name, type='ARMATURE')
-        modifier.object = armature_object
+        # modifier = mesh.modifiers.new(name=mesh_name, type='ARMATURE')
+        # modifier.object = armature_object
 
     bpy.ops.object.mode_set()
 

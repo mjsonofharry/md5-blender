@@ -104,8 +104,8 @@ class Joint:
         translation = mathutils.Matrix.Translation(self.position)
         (qx, qy, qz) = self.orientation
         qw = compute_w(qx, qy, qz)
-        orientation = -mathutils.Quaternion((qw, qx, qy, qz))
-        return translation @ orientation.to_matrix().to_4x4()
+        q = -mathutils.Quaternion((qw, qx, qy, qz))
+        return translation @ q.to_matrix().to_4x4()
 
 
 class Vert:
@@ -126,7 +126,7 @@ class Vert:
 
     @property
     def weightEnd(self) -> int:
-        return self.weightStart + (self.weightCount - 1)
+        return self.weightStart + self.weightCount
 
 
 class Tri:
