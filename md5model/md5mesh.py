@@ -91,6 +91,7 @@ class Joint:
     def parse(cls, data: str):
         return JointParser.parse(data)
 
+    @property
     def to_string(self) -> str:
         (x, y, z) = self.position
         (qx, qy, qz) = self.orientation
@@ -100,7 +101,6 @@ class Joint:
     @implicits('mathutils')
     @functools.lru_cache(maxsize=256)
     def matrix(self, mathutils):
-        print(f'{self.name}: Cache miss!')
         translation = mathutils.Matrix.Translation(self.position)
         (qx, qy, qz) = self.orientation
         qw = compute_w(qx, qy, qz)
@@ -119,9 +119,14 @@ class Vert:
     def parse(cls, data: str):
         return VertParser.parse(data)
 
+    @property
     def to_string(self) -> str:
         (u, v) = self.uv
         return f'vert {self.index} ( {u} {v} ) {self.weightStart} {self.weightCount}'
+
+    @property
+    def weightEnd(self) -> int:
+        return self.weightStart + (self.weightCount - 1)
 
 
 class Tri:
@@ -133,6 +138,7 @@ class Tri:
     def parse(cls, data: str):
         return TriParser.parse(data)
 
+    @property
     def to_string(self) -> str:
         (v1, v2, v3) = self.verts
         return f'tri {self.index} {v1} {v2} {v3}'
@@ -149,6 +155,7 @@ class Weight:
     def parse(cls, data: str):
         return WeightParser.parse(data)
 
+    @property
     def to_string(self) -> str:
         (x, y, z) = self.position
         return f'weight {self.index} {self.jointIndex} {self.bias} ( {x} {y} {z} )'
@@ -166,20 +173,21 @@ class Mesh:
     def parse(cls, data: str):
         return MeshParser.parse(data)
 
+    @property
     def to_string(self) -> str:
         comment = f'\t// {self.comment}\n'
         shader = f'\tshader "{self.shader}"\n\n'
 
         numverts = f'\tnumverts {len(self.verts)}'
-        verts = mkString([x.to_string() for x in self.verts],
+        verts = mkString([x.to_string for x in self.verts],
                          start='\n\t', sep='\n\t', end='\n\n')
 
         numtris = f'\tnumtris {len(self.tris)}'
-        tris = mkString([x.to_string() for x in self.tris],
+        tris = mkString([x.to_string for x in self.tris],
                         start='\n\t', sep='\n\t', end='\n\n')
 
         numweights = f'\tnumweights {len(self.weights)}'
-        weights = mkString([x.to_string() for x in self.weights],
+        weights = mkString([x.to_string for x in self.weights],
                            start='\n\t', sep='\n\t', end='\n')
 
         return 'mesh {\n' + comment + shader + numverts + verts + numtris + tris + numweights + weights + '}\n'
@@ -196,6 +204,7 @@ class Md5Mesh:
     def parse(cls, data: str):
         return Md5MeshParser.parse(data)
 
+    @property
     def to_string(self) -> str:
         version = f'MD5Version {self.version}\n'
         commandline = f'commandline "{self.commandline}"\n\n'
@@ -203,9 +212,9 @@ class Md5Mesh:
         numJoints = f'numJoints {len(self.joints)}\n'
         numMeshes = f'numMeshes {len(self.meshes)}\n\n'
 
-        joints = mkString([x.to_string() for x in self.joints],
+        joints = mkString([x.to_string for x in self.joints],
                           start='joints {\n\t', sep='\n\t', end='\n}\n\n')
 
-        meshes = mkString([x.to_string() for x in self.meshes], sep='\n')
+        meshes = mkString([x.to_string for x in self.meshes], sep='\n')
 
         return version + commandline + numJoints + numMeshes + joints + meshes

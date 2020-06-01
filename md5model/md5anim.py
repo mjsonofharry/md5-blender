@@ -74,8 +74,13 @@ class Hierarchy:
     def parse(cls, data: str):
         return HierarchyParser.parse(data)
 
+    @property
     def to_string(self) -> str:
         return f'"{self.jointName}"\t{self.parentJointIndex} {self.flags} {self.startIndex}\t//{self.comment}'
+
+    @property
+    def expanded_flags(self) -> List[bool]:
+        return [True if x == '1' else False for x in str(bin(56))[2:].zfill(6)[::-1]]
 
 
 class Bound:
@@ -87,6 +92,7 @@ class Bound:
     def parse(cls, data: str):
         return BoundParser.parse(data)
 
+    @property
     def to_string(self) -> str:
         (minX, minY, minZ) = self.min
         (maxX, maxY, maxZ) = self.max
@@ -102,6 +108,7 @@ class BaseFramePart:
     def parse(cls, data: str):
         return BaseFramePartParser.parse(data)
 
+    @property
     def to_string(self) -> str:
         (x, y, z) = self.position
         (qx, qy, qz) = self.orientation
@@ -116,8 +123,9 @@ class BaseFrame:
     def parse(cls, data: str):
         return BaseFrameParser.parse(data)
 
+    @property
     def to_string(self) -> str:
-        parts = [x.to_string() for x in self.parts]
+        parts = [x.to_string for x in self.parts]
         return mkString(parts, start='baseframe {\n\t', sep='\n\t', end='\n}\n')
 
 
@@ -129,6 +137,7 @@ class FramePart:
     def parse(cls, data: str):
         return FramePartParser.parse(data)
 
+    @property
     def to_string(self) -> str:
         return mkString([str(x) for x in self.values], sep=' ')
 
@@ -142,8 +151,9 @@ class Frame:
     def parse(cls, data: str):
         return FrameParser.parse(data)
 
+    @property
     def to_string(self) -> str:
-        parts = [x.to_string() for x in self.parts]
+        parts = [x.to_string for x in self.parts]
         return mkString(parts, start=f'frame {self.index} ' + '{\n\t', sep='\n\t', end='\n}\n')
 
 
@@ -163,6 +173,7 @@ class Md5Anim:
     def parse(cls, data: str):
         return Md5AnimParser.parse(data)
 
+    @property
     def to_string(self) -> str:
         version = f'MD5Version {self.version}\n'
         commandline = f'commandline "{self.commandline}"\n\n'
@@ -172,14 +183,14 @@ class Md5Anim:
         frameRate = f'frameRate {self.frameRate}\n'
         numAnimatedComponents = f'numAnimatedComponents {self.numAnimatedComponents}\n\n'
 
-        hierarchies = mkString([x.to_string() for x in self.hierarchies],
+        hierarchies = mkString([x.to_string for x in self.hierarchies],
                                start='hierarchy {\n\t', sep='\n\t', end='\n}\n\n')
 
-        bounds = mkString([x.to_string() for x in self.bounds],
+        bounds = mkString([x.to_string for x in self.bounds],
                           start='bounds {\n\t', sep='\n\t', end='\n}\n\n')
 
-        baseframe = f'{self.baseframe.to_string()}\n'
+        baseframe = f'{self.baseframe.to_string}\n'
 
-        frames = mkString([x.to_string() for x in self.frames], sep='\n')
+        frames = mkString([x.to_string for x in self.frames], sep='\n')
 
         return version + commandline + numFrames + numJoints + frameRate + numAnimatedComponents + hierarchies + bounds + baseframe + frames

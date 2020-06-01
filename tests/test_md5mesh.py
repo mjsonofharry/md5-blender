@@ -60,7 +60,7 @@ class TestJoint:
     def test_tostring(self):
         text = '\t"Rhand"\t9 ( -3.50706 -28.3922 58.702999 ) ( 0.3317336325 0.3162666777 -0.3598525295 )\t\t// Rloarm'
         joint = md5mesh.Joint.parse(text)
-        assert joint.to_string() == '"Rhand"\t9 ( -3.50706 -28.3922 58.702999 ) ( 0.3317336325 0.3162666777 -0.3598525295 )\t\t// Rloarm'
+        assert joint.to_string == '"Rhand"\t9 ( -3.50706 -28.3922 58.702999 ) ( 0.3317336325 0.3162666777 -0.3598525295 )\t\t// Rloarm'
 
 
 class TestVert:
@@ -75,7 +75,7 @@ class TestVert:
     def test_tostring(self):
         text = '\tvert 7 ( 0.574369 0.525882 ) 10 2'
         vert = md5mesh.Vert.parse(text)
-        assert vert.to_string() == 'vert 7 ( 0.574369 0.525882 ) 10 2'
+        assert vert.to_string == 'vert 7 ( 0.574369 0.525882 ) 10 2'
 
 
 class TestTri:
@@ -88,7 +88,7 @@ class TestTri:
     def test_tostring(self):
         text = '\ttri 1019 707 690 691'
         tri = md5mesh.Tri.parse(text)
-        assert tri.to_string() == 'tri 1019 707 690 691'
+        assert tri.to_string == 'tri 1019 707 690 691'
 
 
 class TestWeight:
@@ -103,7 +103,7 @@ class TestWeight:
     def test_tostring(self):
         text = '\tweight 443 67 0.178646 ( -3.839379 26.337955 4.979258 )'
         weight = md5mesh.Weight.parse(text)
-        assert weight.to_string() == 'weight 443 67 0.178646 ( -3.839379 26.337955 4.979258 )'
+        assert weight.to_string == 'weight 443 67 0.178646 ( -3.839379 26.337955 4.979258 )'
 
 
 class TestMesh:
@@ -158,7 +158,7 @@ class TestMesh:
 
     def test_tostring(self):
         assert md5mesh.Mesh.parse(
-            TestMesh.MESH_SAMPLE).to_string() == TestMesh.MESH_SAMPLE
+            TestMesh.MESH_SAMPLE).to_string == TestMesh.MESH_SAMPLE
 
 
 class TestMd5Mesh:
@@ -218,4 +218,4 @@ mesh {
 
     def test_tostring(self):
         assert md5mesh.Md5Mesh.parse(
-            TestMd5Mesh.MD5MESH_SAMPLE).to_string() == TestMd5Mesh.MD5MESH_SAMPLE
+            TestMd5Mesh.MD5MESH_SAMPLE).to_string == TestMd5Mesh.MD5MESH_SAMPLE

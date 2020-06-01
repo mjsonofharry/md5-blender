@@ -51,7 +51,7 @@ class TestHierarchy:
     def test_tostring(self):
         text = '"Rhand"\t9 56 24\t// Rloarm ( Qx Qy Qz )'
         hierarchy = md5anim.Hierarchy.parse(text)
-        assert hierarchy.to_string() == text
+        assert hierarchy.to_string == text
 
 
 class TestBound:
@@ -64,7 +64,7 @@ class TestBound:
     def test_tostring(self):
         text = '( -29.7891 -29.7891 191.4453 ) ( 17.2734 22.4375 275.6641 )'
         bound = md5anim.Bound.parse(text)
-        assert bound.to_string() == text
+        assert bound.to_string == text
 
 
 class TestBaseFramePart:
@@ -77,7 +77,7 @@ class TestBaseFramePart:
     def test_tostring(self):
         text = '( -0.4375 242.2109 0.5078 ) ( -0.0326106442 -0.9382 0.0516446 )'
         baseFramePart = md5anim.BaseFramePart.parse(text)
-        assert baseFramePart.to_string() == text
+        assert baseFramePart.to_string == text
 
 
 class TestBaseFrame:
@@ -96,7 +96,7 @@ class TestBaseFrame:
     def test_tostring(self):
         text = TestBaseFrame.BASEFRAME_SAMPLE
         baseFrame = md5anim.BaseFrame.parse(text)
-        assert baseFrame.to_string() == text
+        assert baseFrame.to_string == text
 
 
 class TestFramePart:
@@ -108,7 +108,7 @@ class TestFramePart:
     def test_tostring(self):
         text = '1.8516 -11.9141 -0.9287547379 -0.2488'
         framePart = md5anim.FramePart.parse(text)
-        assert framePart.to_string() == text
+        assert framePart.to_string == text
 
 
 class TestFrame:
@@ -137,7 +137,7 @@ class TestFrame:
     def test_tostring(self):
         text = TestFrame.FRAME_SAMPLE
         frame = md5anim.Frame.parse(text)
-        assert frame.to_string() == text
+        assert frame.to_string == text
 
 
 class TestHierarchy:
@@ -189,7 +189,7 @@ class TestHierarchy:
     def test_tostring(self):
         text = '"Rhand"\t9 56 24\t// Rloarm ( Qx Qy Qz )'
         hierarchy = md5anim.Hierarchy.parse(text)
-        assert hierarchy.to_string() == text
+        assert hierarchy.to_string == text
 
 
 class TestBound:
@@ -202,7 +202,7 @@ class TestBound:
     def test_tostring(self):
         text = '( -29.7891 -29.7891 191.4453 ) ( 17.2734 22.4375 275.6641 )'
         bound = md5anim.Bound.parse(text)
-        assert bound.to_string() == text
+        assert bound.to_string == text
 
 
 class TestBaseFramePart:
@@ -215,7 +215,7 @@ class TestBaseFramePart:
     def test_tostring(self):
         text = '( -0.4375 242.2109 0.5078 ) ( -0.0326106442 -0.9382 0.0516446 )'
         baseFramePart = md5anim.BaseFramePart.parse(text)
-        assert baseFramePart.to_string() == text
+        assert baseFramePart.to_string == text
 
 
 class TestBaseFrame:
@@ -234,7 +234,7 @@ class TestBaseFrame:
     def test_tostring(self):
         text = TestBaseFrame.BASEFRAME_SAMPLE
         baseFrame = md5anim.BaseFrame.parse(text)
-        assert baseFrame.to_string() == text
+        assert baseFrame.to_string == text
 
 
 class TestFramePart:
@@ -246,7 +246,7 @@ class TestFramePart:
     def test_tostring(self):
         text = '1.8516 -11.9141 -0.9287547379 -0.2488'
         framePart = md5anim.FramePart.parse(text)
-        assert framePart.to_string() == text
+        assert framePart.to_string == text
 
 
 class TestFrame:
@@ -275,7 +275,7 @@ class TestFrame:
     def test_tostring(self):
         text = TestFrame.FRAME_SAMPLE
         frame = md5anim.Frame.parse(text)
-        assert frame.to_string() == text
+        assert frame.to_string == text
 
 
 class TestMd5Anim:
@@ -356,4 +356,4 @@ frame 4 {
     def test_tostring(self):
         text = TestMd5Anim.MD5ANIM_SAMPLE
         anim = md5anim.Md5Anim.parse(text)
-        assert anim.to_string() == text
+        assert anim.to_string == text
