@@ -71,7 +71,7 @@ def Md5MeshParser():
 
 
 def compute_w(qx: float, qy: float, qz: float) -> float:
-    '''Compute `w` for a unit quaternion (reference: http://tfc.duke.free.fr/coding/md5-specs-en.html)'''
+    '''Compute `w` for a unit quaternion'''
     t = 1.0 - (qx * qx) - (qy * qy) - (qz * qz)
     if t < 0.0:
         return 0.0
@@ -101,6 +101,7 @@ class Joint:
     @implicits('mathutils')
     @functools.lru_cache(maxsize=256)
     def matrix(self, mathutils):
+        '''Get the translation matrix for the joint (returns `mathutils.Matrix`)'''
         translation = mathutils.Matrix.Translation(self.position)
         (qx, qy, qz) = self.orientation
         qw = compute_w(qx, qy, qz)
@@ -218,3 +219,23 @@ class Md5Mesh:
         meshes = mkString([x.to_string for x in self.meshes], sep='\n')
 
         return version + commandline + numJoints + numMeshes + joints + meshes
+
+    @implicits('mathutils')
+    def apply_weight_to_position(self, position, weight, mathutils):
+        '''Adjust a vector using a single weight'''
+        joint = self.joints[weight.jointIndex]
+        adjust = ((joint.matrix @ mathutils.Vector(weight.position)) * weight.bias)
+        return position + adjust
+
+    @implicits('mathutils')
+    def compute_global_vert_position(self, vert: Vert, mesh: Mesh, mathutils):
+        '''Compute the global position of `vert` using weights from `mesh`'''
+        weights = mesh.weights[vert.weightStart:vert.weightEnd]
+        acc_init = mathutils.Vector((0.0, 0.0, 0.0))
+        return functools.reduce(self.apply_weight_to_position, [acc_init, *weights])
+
+    def vert_belongs_to_group(self, vert: Vert, mesh: Mesh, joint: Joint):
+        '''Check if `vert` from `mesh` belongs to group associated with `joint`'''
+        weights = mesh.weights[vert.weightStart:vert.weightEnd]
+        names = [self.joints[weight.jointIndex].name for weight in weights]
+        return joint.name in names
