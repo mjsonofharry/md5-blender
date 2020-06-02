@@ -68,25 +68,17 @@ def load(operator, context, path):
         mesh_object = bpy.data.objects.new(mesh_name, object_data=mesh_data)
 
         for joint in md5_mesh.joints:
-            vertex_group = mesh_object.vertex_groups.new(name=joint.name)
-
-            indices = []
-            for i, vert in enumerate(mesh.verts):
+            def is_in_vert_group(vert: md5mesh.Vert):
                 weights = mesh.weights[vert.weightStart:vert.weightEnd]
-                for weight in weights:
-                    if joint.name == md5_mesh.joints[weight.jointIndex].name:
-                        indices.append(i)
+                return joint.name in [
+                    md5_mesh.joints[weight.jointIndex].name for weight in weights
+                ]
 
-            # def is_part_of_vertex_group(vert: md5mesh.Vert):
-            #     weights = mesh.weights[vert.weightStart:vert.weightEnd]
-            #     return joint.name in [
-            #         md5_mesh.joints[weight.jointIndex].name for weight in weights
-            #     ]
-            # indices = [
-            #     i for i, vert in enumerate(mesh.verts)
-            #     if is_part_of_vertex_group(vert)
-            # ]
+            indices = [
+                i for i, vert in enumerate(mesh.verts) if is_in_vert_group(vert)
+            ]
 
+            vertex_group = mesh_object.vertex_groups.new(name=joint.name)
             vertex_group.add(index=indices, weight=1, type='REPLACE')
 
         modifier = mesh_object.modifiers.new(name=mesh_name, type='ARMATURE')
