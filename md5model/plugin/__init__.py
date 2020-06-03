@@ -63,7 +63,8 @@ class ExportMd5Mesh(bpy.types.Operator, bpy_extras.io_utils.ImportHelper):
         pass
 
     def execute(self, context):
-        pass
+        from . import export_md5mesh
+        return export_md5mesh.save(self, context, self.filepath)
 
 
 class ExportMd5Anim(bpy.types.Operator, bpy_extras.io_utils.ImportHelper):

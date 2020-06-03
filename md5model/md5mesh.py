@@ -91,6 +91,21 @@ class Joint:
     def parse(cls, data: str):
         return JointParser.parse(data)
 
+    @classmethod
+    def from_bone(cls, bone, armature_object):
+        parentIndex = [
+            i for i, other_bone in enumerate(armature_object.data.bones)
+            if bone.parent and other_bone.name == bone.parent.name
+        ] + [-1]
+        location, rotation, scale = bone.matrix_local.decompose()
+        return cls(
+            name=bone.name,
+            parentIndex=parentIndex[0],
+            position=location[:],
+            orientation=(-rotation.normalized())[1:],
+            comment=None
+        )
+
     @property
     def to_string(self) -> str:
         (x, y, z) = self.position
