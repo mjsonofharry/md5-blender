@@ -1,6 +1,6 @@
 param(
     [String]$blender_path="C:\Program Files (x86)\Steam\steamapps\common\Blender",
-    [String]$blender_version="2.82"
+    [String]$blender_version="2.83"
 )
 
 $project_path = (get-item $PSScriptRoot).parent.FullName
