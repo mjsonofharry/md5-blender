@@ -23,10 +23,11 @@ def load(operator, context, path):
     collection = bpy.data.collections.new(name)
     bpy.context.scene.collection.children.link(collection)
 
-    armature_name = f'{name} Armature'.strip()
+    armature_name = name.strip()
     armature_data = bpy.data.armatures.new(armature_name)
     armature_object = bpy.data.objects.new(
         armature_name, object_data=armature_data)
+    armature_object['commandline'] = md5_mesh.commandline
     collection.objects.link(armature_object)
 
     bpy.context.view_layer.objects.active = armature_object
@@ -47,7 +48,7 @@ def load(operator, context, path):
         bone.layers[1] = True
 
     for mesh in md5_mesh.meshes:
-        mesh_name = f'{mesh.comment}'.strip()
+        mesh_name = mesh.comment.strip()
         verts = [
             md5_mesh.compute_global_vert_position(vert, mesh)
             for vert in mesh.verts
@@ -58,6 +59,7 @@ def load(operator, context, path):
         mesh_data.from_pydata(verts, edges, faces)
         mesh_data.flip_normals()
         mesh_object = bpy.data.objects.new(mesh_name, object_data=mesh_data)
+        mesh_object['shader'] = mesh.shader
 
         for joint in md5_mesh.joints:
             indices = [
