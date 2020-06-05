@@ -1,4 +1,5 @@
 import bpy
+import bmesh
 from .. import md5mesh
 
 
@@ -11,20 +12,21 @@ def save(operator, context, path):
     ][0]
 
     joints = [
-        md5mesh.Joint.from_bone(bone, armature_object)
+        md5mesh.Joint.from_blender(bone, armature_object)
         for bone in armature_object.data.bones
     ]
 
-    mesh_objects = [
-        obj for obj in collection.objects
-        if obj.data in bpy.data.meshes[:]
+    meshes = [
+        md5mesh.Mesh.from_blender(mesh_object, armature_object)
+        for mesh_object in collection.objects
+        if mesh_object.data in bpy.data.meshes[:]
     ]
 
     md5_mesh: md5mesh.Md5Mesh = md5mesh.Md5Mesh(
         version=10,
         commandline=armature_object.get('commandline', ''),
         joints=joints,
-        meshes=[]
+        meshes=meshes
     )
 
     f = open(path, 'w', encoding='utf-8')

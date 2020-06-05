@@ -92,24 +92,24 @@ class Joint:
         return JointParser.parse(data)
 
     @classmethod
-    def from_bone(cls, bone, armature_object):
-        parentIndex = [
+    def from_blender(cls, bone, armature_object):
+        parent_index = [
             i for i, other_bone in enumerate(armature_object.data.bones)
             if bone.parent and other_bone.name == bone.parent.name
-        ] + [-1]
+        ]
+        parent_name = bone.parent.name if bone.parent else ''
         location, rotation, scale = bone.matrix_local.decompose()
         return cls(
             name=bone.name,
-            parentIndex=parentIndex[0],
+            parentIndex=[*parent_index, -1][0],
             position=location[:],
             orientation=(-rotation.normalized())[1:],
-            comment=None
-        )
+            comment=f' {parent_name}')
 
     @property
     def to_string(self) -> str:
-        (x, y, z) = self.position
-        (qx, qy, qz) = self.orientation
+        (x, y, z) = [formatNumber(c) for c in self.position]
+        (qx, qy, qz) = [formatNumber(c) for c in self.orientation]
         return f'"{self.name}"\t{self.parentIndex} ( {x} {y} {z} ) ( {qx} {qy} {qz} )\t\t//{self.comment}'
 
     @property
@@ -137,7 +137,7 @@ class Vert:
 
     @property
     def to_string(self) -> str:
-        (u, v) = self.uv
+        (u, v) = [formatNumber(c) for c in self.uv]
         return f'vert {self.index} ( {u} {v} ) {self.weightStart} {self.weightCount}'
 
     @property
@@ -173,8 +173,8 @@ class Weight:
 
     @property
     def to_string(self) -> str:
-        (x, y, z) = self.position
-        return f'weight {self.index} {self.jointIndex} {self.bias} ( {x} {y} {z} )'
+        (x, y, z) = [formatNumber(c) for c in self.position]
+        return f'weight {self.index} {self.jointIndex} {formatNumber(self.bias)} ( {x} {y} {z} )'
 
 
 class Mesh:
@@ -188,6 +188,39 @@ class Mesh:
     @classmethod
     def parse(cls, data: str):
         return MeshParser.parse(data)
+
+    @classmethod
+    def from_blender(cls, mesh_object, armature_object):
+        shader = mesh_object.get('shader', '')
+        comment = mesh_object.get('comment', '')
+        tris = [Tri(index=i, verts=poly.vertices) for i, poly in enumerate(mesh_object.data.polygons)]
+        
+        verts = []
+
+        weights = []
+        weight_count = 0
+        for i, vert in enumerate(mesh_object.data.vertices):
+            groups = [vg.group for vg in vert.groups]
+            for group in groups:
+                bone = armature_object.data.bones[group]
+                x, y, z = (
+                    bone.matrix_local.inverted() @ 
+                    armature_object.matrix_world.inverted() @ 
+                    vert.co.to_4d()
+                )[:3]
+                weights.append(Weight(
+                    index=weight_count,
+                    jointIndex=group,
+                    bias=0,
+                    position=(x, y, z)))
+                weight_count += 1
+
+        return cls(
+            comment=comment,
+            shader=shader,
+            verts=verts,
+            tris=tris,
+            weights=weights)
 
     @property
     def to_string(self) -> str:

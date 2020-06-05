@@ -12,6 +12,15 @@ def mkString(x: List[str], start: str = '', sep: str = '', end: str = ''):
     return start + sep.join(x) + end
 
 
+def formatNumber(number: float) -> str:
+    rounded = round(number, 10)
+    truncated = int(rounded)
+    if (float(truncated) == rounded):
+        return str(truncated)
+    else:
+        return str(rounded)
+
+
 def whitespace():
     '''Parse whitespace only'''
     return regex(r'\s*', re.MULTILINE)
