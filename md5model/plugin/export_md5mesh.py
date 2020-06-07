@@ -1,5 +1,6 @@
 import bpy
 import bmesh
+from typing import List
 from .. import md5mesh
 
 
@@ -11,12 +12,12 @@ def save(operator, context, path):
         if obj.data in bpy.data.armatures[:]
     ][0]
 
-    joints = [
+    joints: List[md5mesh.Joint] = [
         md5mesh.Joint.from_blender(bone, armature_object)
         for bone in armature_object.data.bones
     ]
 
-    meshes = [
+    meshes: List[md5mesh.Mesh] = [
         md5mesh.Mesh.from_blender(mesh_object, armature_object)
         for mesh_object in collection.objects
         if mesh_object.data in bpy.data.meshes[:]

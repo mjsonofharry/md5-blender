@@ -200,9 +200,13 @@ class Mesh:
         weights = []
         weight_count = 0
         for i, vert in enumerate(mesh_object.data.vertices):
-            groups = [vg.group for vg in vert.groups]
-            for group in groups:
-                bone = armature_object.data.bones[group]
+            verts.append(Vert(
+                index=i,
+                uv=(0.0, 0.0),
+                weightStart=weight_count,
+                weightCount=len(vert.groups)))
+            for vert_group in vert.groups:
+                bone = armature_object.data.bones[vert_group.group]
                 x, y, z = (
                     bone.matrix_local.inverted() @ 
                     armature_object.matrix_world.inverted() @ 
@@ -210,8 +214,8 @@ class Mesh:
                 )[:3]
                 weights.append(Weight(
                     index=weight_count,
-                    jointIndex=group,
-                    bias=0,
+                    jointIndex=vert_group.group,
+                    bias=vert_group.weight,
                     position=(x, y, z)))
                 weight_count += 1
 

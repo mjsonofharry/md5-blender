@@ -1,4 +1,5 @@
 import bpy
+import bmesh
 import functools
 import math
 import mathutils
@@ -60,14 +61,15 @@ def load(operator, context, path):
         mesh_data.flip_normals()
         mesh_object = bpy.data.objects.new(mesh_name, object_data=mesh_data)
         mesh_object['shader'] = mesh.shader
+        mesh_object['comment'] = mesh.comment
 
         for joint in md5_mesh.joints:
-            indices = [
-                i for i, vert in enumerate(mesh.verts)
-                if md5_mesh.vert_belongs_to_group(vert, mesh, joint)
-            ]
             vertex_group = mesh_object.vertex_groups.new(name=joint.name)
-            vertex_group.add(index=indices, weight=1.0, type='REPLACE')
+
+        for vert in mesh.verts:
+            for weight in mesh.weights[vert.weightStart:vert.weightEnd]:
+                vertex_group = mesh_object.vertex_groups[weight.jointIndex]
+                vertex_group.add(index=[vert.index], weight=weight.bias, type='ADD')
 
         modifier = mesh_object.modifiers.new(name=mesh_name, type='ARMATURE')
         modifier.object = armature_object
