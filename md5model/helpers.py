@@ -18,7 +18,7 @@ def formatNumber(number: float) -> str:
     if (float(truncated) == rounded):
         return str(truncated)
     else:
-        return str(rounded)
+        return f'{rounded:.10f}'
 
 
 def whitespace():
