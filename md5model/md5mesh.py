@@ -12,7 +12,7 @@ def JointParser():
     parentIndex = yield integer() << spaces1()
     (x, y, z) = yield parens(sequence(number(), 3)) << spaces()
     (qx, qy, qz) = yield parens(sequence(number(), 3)) << spaces()
-    comment = yield slashyComment()
+    comment = yield slashyComment() ^ spaces()
     return Joint(name=name, parentIndex=parentIndex, position=(x, y, z), orientation=(qx, qy, qz), comment=comment)
 
 
@@ -190,19 +190,23 @@ class Mesh:
         return MeshParser.parse(data)
 
     @classmethod
-    def from_blender(cls, mesh_object, armature_object):
+    @implicits('bmesh')
+    def from_blender(cls, mesh_object, armature_object, bmesh):
         shader = mesh_object.get('shader', '')
         comment = mesh_object.get('comment', '')
         tris = [Tri(index=i, verts=poly.vertices) for i, poly in enumerate(mesh_object.data.polygons)]
         
+        bm = bmesh.new()
+        bm.from_mesh(mesh_object.data)
+        uv_layer = bm.loops.layers.uv.active
         verts = []
-
         weights = []
         weight_count = 0
-        for i, vert in enumerate(mesh_object.data.vertices):
+        for i, (vert, bm_vert) in enumerate(zip(mesh_object.data.vertices, bm.verts)):
+            uv = bm_vert.link_loops[0][uv_layer].uv
             verts.append(Vert(
                 index=i,
-                uv=(0.0, 0.0),
+                uv=(uv.x, uv.y),
                 weightStart=weight_count,
                 weightCount=len(vert.groups)))
             for vert_group in vert.groups:
@@ -218,6 +222,8 @@ class Mesh:
                     bias=vert_group.weight,
                     position=(x, y, z)))
                 weight_count += 1
+
+        bm.free()
 
         return cls(
             comment=comment,

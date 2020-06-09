@@ -69,7 +69,21 @@ def load(operator, context, path):
         for vert in mesh.verts:
             for weight in mesh.weights[vert.weightStart:vert.weightEnd]:
                 vertex_group = mesh_object.vertex_groups[weight.jointIndex]
-                vertex_group.add(index=[vert.index], weight=weight.bias, type='ADD')
+                vertex_group.add(
+                    index=[vert.index],
+                    weight=weight.bias,
+                    type='ADD')
+
+        bm = bmesh.new()
+        bm.from_mesh(mesh_object.data)
+
+        uv_layer = bm.loops.layers.uv.verify()
+        for i, vert in enumerate(bm.verts):
+            for loop in vert.link_loops:
+                loop[uv_layer].uv = mesh.verts[i].uv
+
+        bm.to_mesh(mesh_object.data)
+        bm.free()
 
         modifier = mesh_object.modifiers.new(name=mesh_name, type='ARMATURE')
         modifier.object = armature_object
