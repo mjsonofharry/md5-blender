@@ -1,7 +1,6 @@
-import functools
 import math
+from dataclasses import dataclass
 from typing import Tuple, List
-from .implicits import implicits
 from .parsec import *
 from .helpers import *
 
@@ -70,41 +69,17 @@ def Md5MeshParser():
     return Md5Mesh(version=version, commandline=commandline, joints=joints, meshes=meshes)
 
 
-def compute_w(qx: float, qy: float, qz: float) -> float:
-    '''Compute `w` for a unit quaternion'''
-    t = 1.0 - (qx * qx) - (qy * qy) - (qz * qz)
-    if t < 0.0:
-        return 0.0
-    else:
-        return -math.sqrt(t)
-
-
+@dataclass(frozen=True)
 class Joint:
-    def __init__(self, name: str, parentIndex: int, position: Tuple[float, float, float], orientation: Tuple[float, float, float, float], comment: str):
-        self.name = name
-        self.parentIndex = parentIndex
-        self.position = position
-        self.orientation = orientation
-        self.comment = comment
+    name: str
+    parentIndex: int
+    position: Tuple[float, float, float]
+    orientation: Tuple[float, float, float]
+    comment: str
 
     @classmethod
     def parse(cls, data: str):
         return JointParser.parse(data)
-
-    @classmethod
-    def from_blender(cls, bone, armature_object):
-        parent_index = [
-            i for i, other_bone in enumerate(armature_object.data.bones)
-            if bone.parent and other_bone.name == bone.parent.name
-        ]
-        parent_name = bone.parent.name if bone.parent else ''
-        location, rotation, scale = bone.matrix_local.decompose()
-        return cls(
-            name=bone.name,
-            parentIndex=[*parent_index, -1][0],
-            position=location[:],
-            orientation=(-rotation.normalized())[1:],
-            comment=f' {parent_name}')
 
     @property
     def to_string(self) -> str:
@@ -112,24 +87,13 @@ class Joint:
         (qx, qy, qz) = [formatNumber(c) for c in self.orientation]
         return f'"{self.name}"\t{self.parentIndex} ( {x} {y} {z} ) ( {qx} {qy} {qz} )\t\t//{self.comment}'
 
-    @property
-    @implicits('mathutils')
-    @functools.lru_cache(maxsize=256)
-    def matrix(self, mathutils):
-        '''Get the translation matrix for the joint (returns `mathutils.Matrix`)'''
-        translation = mathutils.Matrix.Translation(self.position)
-        (qx, qy, qz) = self.orientation
-        qw = compute_w(qx, qy, qz)
-        q = -mathutils.Quaternion((qw, qx, qy, qz))
-        return translation @ q.to_matrix().to_4x4()
 
-
+@dataclass(frozen=True)
 class Vert:
-    def __init__(self, index: int, uv: Tuple[float, float], weightStart: int, weightCount: int):
-        self.index = index
-        self.uv = uv
-        self.weightStart = weightStart
-        self.weightCount = weightCount
+    index: int
+    uv: Tuple[float, float]
+    weightStart: int
+    weightCount: int
 
     @classmethod
     def parse(cls, data: str):
@@ -145,10 +109,10 @@ class Vert:
         return self.weightStart + self.weightCount
 
 
+@dataclass(frozen=True)
 class Tri:
-    def __init__(self, index: int, verts: Tuple[int, int, int]):
-        self.index = index
-        self.verts = verts
+    index: int
+    verts: Tuple[int, int, int]
 
     @classmethod
     def parse(cls, data: str):
@@ -160,12 +124,12 @@ class Tri:
         return f'tri {self.index} {v1} {v2} {v3}'
 
 
+@dataclass(frozen=True)
 class Weight:
-    def __init__(self, index: int, jointIndex: int, bias: float, position: Tuple[float, float, float]):
-        self.index = index
-        self.jointIndex = jointIndex
-        self.bias = bias
-        self.position = position
+    index: int
+    jointIndex: int
+    bias: float
+    position: Tuple[float, float, float]
 
     @classmethod
     def parse(cls, data: str):
@@ -177,60 +141,17 @@ class Weight:
         return f'weight {self.index} {self.jointIndex} {formatNumber(self.bias)} ( {x} {y} {z} )'
 
 
+@dataclass(frozen=True)
 class Mesh:
-    def __init__(self, comment: str, shader: str, verts: List[Vert], tris: List[Tri], weights: List[Weight]):
-        self.comment = comment
-        self.shader = shader
-        self.verts = verts
-        self.tris = tris
-        self.weights = weights
+    comment: str
+    shader: str
+    verts: List[Vert]
+    tris: List[Tri]
+    weights: List[Weight]
 
     @classmethod
     def parse(cls, data: str):
         return MeshParser.parse(data)
-
-    @classmethod
-    @implicits('bmesh')
-    def from_blender(cls, mesh_object, armature_object, bmesh):
-        shader = mesh_object.get('shader', '')
-        comment = mesh_object.get('comment', '')
-        tris = [Tri(index=i, verts=poly.vertices) for i, poly in enumerate(mesh_object.data.polygons)]
-        
-        bm = bmesh.new()
-        bm.from_mesh(mesh_object.data)
-        uv_layer = bm.loops.layers.uv.active
-        verts = []
-        weights = []
-        weight_count = 0
-        for i, (vert, bm_vert) in enumerate(zip(mesh_object.data.vertices, bm.verts)):
-            uv = bm_vert.link_loops[0][uv_layer].uv
-            verts.append(Vert(
-                index=i,
-                uv=(uv.x, uv.y),
-                weightStart=weight_count,
-                weightCount=len(vert.groups)))
-            for vert_group in vert.groups:
-                bone = armature_object.data.bones[vert_group.group]
-                x, y, z = (
-                    bone.matrix_local.inverted() @ 
-                    armature_object.matrix_world.inverted() @ 
-                    vert.co.to_4d()
-                )[:3]
-                weights.append(Weight(
-                    index=weight_count,
-                    jointIndex=vert_group.group,
-                    bias=vert_group.weight,
-                    position=(x, y, z)))
-                weight_count += 1
-
-        bm.free()
-
-        return cls(
-            comment=comment,
-            shader=shader,
-            verts=verts,
-            tris=tris,
-            weights=weights)
 
     @property
     def to_string(self) -> str:
@@ -238,26 +159,29 @@ class Mesh:
         shader = f'\tshader "{self.shader}"\n\n'
 
         numverts = f'\tnumverts {len(self.verts)}'
-        verts = mkString([x.to_string for x in self.verts],
-                         start='\n\t', sep='\n\t', end='\n\n')
+        verts = mkString(
+            [x.to_string for x in self.verts],
+            start='\n\t', sep='\n\t', end='\n\n')
 
         numtris = f'\tnumtris {len(self.tris)}'
-        tris = mkString([x.to_string for x in self.tris],
-                        start='\n\t', sep='\n\t', end='\n\n')
+        tris = mkString(
+            [x.to_string for x in self.tris],
+            start='\n\t', sep='\n\t', end='\n\n')
 
         numweights = f'\tnumweights {len(self.weights)}'
-        weights = mkString([x.to_string for x in self.weights],
-                           start='\n\t', sep='\n\t', end='\n')
+        weights = mkString(
+            [x.to_string for x in self.weights],
+            start='\n\t', sep='\n\t', end='\n')
 
         return 'mesh {\n' + comment + shader + numverts + verts + numtris + tris + numweights + weights + '}\n'
 
 
+@dataclass(frozen=True)
 class Md5Mesh:
-    def __init__(self, version: int, commandline: str, joints: List[Joint], meshes: List[Mesh]):
-        self.version = version
-        self.commandline = commandline
-        self.joints = joints
-        self.meshes = meshes
+    version: int
+    commandline: str
+    joints: List[Joint]
+    meshes: List[Mesh]
 
     @classmethod
     def parse(cls, data: str):
@@ -271,29 +195,10 @@ class Md5Mesh:
         numJoints = f'numJoints {len(self.joints)}\n'
         numMeshes = f'numMeshes {len(self.meshes)}\n\n'
 
-        joints = mkString([x.to_string for x in self.joints],
-                          start='joints {\n\t', sep='\n\t', end='\n}\n\n')
+        joints = mkString(
+            [x.to_string for x in self.joints],
+            start='joints {\n\t', sep='\n\t', end='\n}\n\n')
 
         meshes = mkString([x.to_string for x in self.meshes], sep='\n')
 
         return version + commandline + numJoints + numMeshes + joints + meshes
-
-    @implicits('mathutils')
-    def apply_weight_to_position(self, position, weight, mathutils):
-        '''Adjust a vector using a single weight'''
-        joint = self.joints[weight.jointIndex]
-        adjust = ((joint.matrix @ mathutils.Vector(weight.position)) * weight.bias)
-        return position + adjust
-
-    @implicits('mathutils')
-    def compute_global_vert_position(self, vert: Vert, mesh: Mesh, mathutils):
-        '''Compute the global position of `vert` using weights from `mesh`'''
-        weights = mesh.weights[vert.weightStart:vert.weightEnd]
-        acc_init = mathutils.Vector((0.0, 0.0, 0.0))
-        return functools.reduce(self.apply_weight_to_position, [acc_init, *weights])
-
-    def vert_belongs_to_group(self, vert: Vert, mesh: Mesh, joint: Joint):
-        '''Check if `vert` from `mesh` belongs to group associated with `joint`'''
-        weights = mesh.weights[vert.weightStart:vert.weightEnd]
-        names = [self.joints[weight.jointIndex].name for weight in weights]
-        return joint.name in names

@@ -134,6 +134,7 @@ dmypy.json
 
 # output
 *.zip
+out/
 
 # notes
 ref/

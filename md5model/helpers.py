@@ -15,10 +15,10 @@ def mkString(x: List[str], start: str = '', sep: str = '', end: str = ''):
 def formatNumber(number: float) -> str:
     rounded = round(number, 10)
     truncated = int(rounded)
-    if (float(truncated) == rounded):
+    if float(truncated) == rounded:
         return str(truncated)
     else:
-        return f'{rounded:.10f}'
+        return str(f'{rounded:.10f}').rstrip('0')
 
 
 def whitespace():
