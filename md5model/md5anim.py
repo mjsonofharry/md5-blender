@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from typing import Tuple, List
 from .parsec import *
 from .helpers import *
@@ -62,13 +63,13 @@ def Md5AnimParser():
     return Md5Anim(version=version, commandline=commandline, numJoints=numJoints, frameRate=frameRate, numAnimatedComponents=numAnimatedComponents, hierarchies=hierarchies, bounds=bounds, baseframe=baseframe, frames=frames)
 
 
+@dataclass(frozen=True)
 class Hierarchy:
-    def __init__(self, jointName: str, parentJointIndex: int, flags: int, startIndex: int, comment: str):
-        self.jointName = jointName
-        self.parentJointIndex = parentJointIndex
-        self.flags = flags
-        self.startIndex = startIndex
-        self.comment = comment
+    jointName: str
+    parentJointIndex: int
+    flags: int
+    startIndex: int
+    comment: str
 
     @classmethod
     def parse(cls, data: str):
@@ -83,10 +84,10 @@ class Hierarchy:
         return [True if x == '1' else False for x in str(bin(56))[2:].zfill(6)[::-1]]
 
 
+@dataclass(frozen=True)
 class Bound:
-    def __init__(self, min: Tuple[float, float, float], max: Tuple[float, float, float]):
-        self.min = min
-        self.max = max
+    min: Tuple[float, float, float]
+    max: Tuple[float, float, float]
 
     @classmethod
     def parse(cls, data: str):
@@ -94,15 +95,15 @@ class Bound:
 
     @property
     def to_string(self) -> str:
-        (minX, minY, minZ) = self.min
-        (maxX, maxY, maxZ) = self.max
+        (minX, minY, minZ) = [formatNumber(c) for c in self.min]
+        (maxX, maxY, maxZ) = [formatNumber(c) for c in self.max]
         return f'( {minX} {minY} {minZ} ) ( {maxX} {maxY} {maxZ} )'
 
 
+@dataclass(frozen=True)
 class BaseFramePart:
-    def __init__(self, position: Tuple[float, float, float], orientation: Tuple[float, float, float]):
-        self.position = position
-        self.orientation = orientation
+    position: Tuple[float, float, float]
+    orientation: Tuple[float, float, float]
 
     @classmethod
     def parse(cls, data: str):
@@ -110,14 +111,14 @@ class BaseFramePart:
 
     @property
     def to_string(self) -> str:
-        (x, y, z) = self.position
-        (qx, qy, qz) = self.orientation
+        (x, y, z) = [formatNumber(c) for c in self.position]
+        (qx, qy, qz) = [formatNumber(c) for c in self.orientation]
         return f'( {x} {y} {z} ) ( {qx} {qy} {qz} )'
 
 
+@dataclass(frozen=True)
 class BaseFrame:
-    def __init__(self, parts: List[BaseFramePart]):
-        self.parts = parts
+    parts: List[BaseFramePart]
 
     @classmethod
     def parse(cls, data: str):
@@ -129,9 +130,9 @@ class BaseFrame:
         return mkString(parts, start='baseframe {\n\t', sep='\n\t', end='\n}\n')
 
 
+@dataclass(frozen=True)
 class FramePart:
-    def __init__(self, values: List[float]):
-        self.values = values
+    values: List[float]
 
     @classmethod
     def parse(cls, data: str):
@@ -139,13 +140,13 @@ class FramePart:
 
     @property
     def to_string(self) -> str:
-        return mkString([str(x) for x in self.values], sep=' ')
+        return mkString([formatNumber(x) for x in self.values], sep=' ')
 
 
+@dataclass(frozen=True)
 class Frame:
-    def __init__(self, index: int, parts: List[FramePart]):
-        self.index = index
-        self.parts = parts
+    index: int
+    parts: List[FramePart]
 
     @classmethod
     def parse(cls, data: str):
@@ -157,17 +158,17 @@ class Frame:
         return mkString(parts, start=f'frame {self.index} ' + '{\n\t', sep='\n\t', end='\n}\n')
 
 
+@dataclass(frozen=True)
 class Md5Anim:
-    def __init__(self, version: int, commandline: str, numJoints: int, frameRate: int, numAnimatedComponents: int, hierarchies: List[Hierarchy], bounds: List[Bound], baseframe: Frame, frames: List[Frame]):
-        self.version = version
-        self.commandline = commandline
-        self.numJoints = numJoints
-        self.frameRate = frameRate
-        self.numAnimatedComponents = numAnimatedComponents
-        self.hierarchies = hierarchies
-        self.bounds = bounds
-        self.baseframe = baseframe
-        self.frames = frames
+    version: int
+    commandline: str
+    numJoints: int
+    frameRate: int
+    numAnimatedComponents: int
+    hierarchies: List[Hierarchy]
+    bounds: List[Bound]
+    baseframe: Frame
+    frames: List[Frame]
 
     @classmethod
     def parse(cls, data: str):
@@ -183,11 +184,13 @@ class Md5Anim:
         frameRate = f'frameRate {self.frameRate}\n'
         numAnimatedComponents = f'numAnimatedComponents {self.numAnimatedComponents}\n\n'
 
-        hierarchies = mkString([x.to_string for x in self.hierarchies],
-                               start='hierarchy {\n\t', sep='\n\t', end='\n}\n\n')
+        hierarchies = mkString(
+            [x.to_string for x in self.hierarchies],
+            start='hierarchy {\n\t', sep='\n\t', end='\n}\n\n')
 
-        bounds = mkString([x.to_string for x in self.bounds],
-                          start='bounds {\n\t', sep='\n\t', end='\n}\n\n')
+        bounds = mkString(
+            [x.to_string for x in self.bounds],
+            start='bounds {\n\t', sep='\n\t', end='\n}\n\n')
 
         baseframe = f'{self.baseframe.to_string}\n'
 
