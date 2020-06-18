@@ -85,12 +85,17 @@ def load(operator, context, path):
         mesh_object['shader'] = mesh.shader
         mesh_object['comment'] = mesh.comment
 
-        for joint in md5_mesh.joints:
-            vertex_group = mesh_object.vertex_groups.new(name=joint.name)
+        for i, joint in enumerate(md5_mesh.joints):
+            if i in (weight.jointIndex for weight in mesh.weights):
+                vertex_group = mesh_object.vertex_groups.new(name=joint.name)
 
         for vert in mesh.verts:
             for weight in mesh.weights[vert.weightStart:vert.weightEnd]:
-                vertex_group = mesh_object.vertex_groups[weight.jointIndex]
+                joint = md5_mesh.joints[weight.jointIndex]
+                vertex_group = next(
+                    group for group in mesh_object.vertex_groups
+                    if group.name == joint.name
+                )
                 vertex_group.add(
                     index=[vert.index],
                     weight=weight.bias,
@@ -100,9 +105,13 @@ def load(operator, context, path):
         bm.from_mesh(mesh_object.data)
 
         uv_layer = bm.loops.layers.uv.verify()
-        for i, vert in enumerate(bm.verts):
-            for loop in vert.link_loops:
+        deform_layer = bm.verts.layers.deform.verify()
+
+        for i, (vert, bm_vert) in enumerate(zip(mesh.verts, bm.verts)):
+            for loop in bm_vert.link_loops:
                 loop[uv_layer].uv = mesh.verts[i].uv
+            # for weight in mesh.weights[vert.weightStart:vert.weightEnd]:
+            #     bm_vert[deform_layer][weight.jointIndex] = weight.bias
 
         bm.to_mesh(mesh_object.data)
         bm.free()
