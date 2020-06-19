@@ -1,5 +1,4 @@
 import bpy
-import bmesh
 import functools
 import math
 import mathutils
@@ -85,36 +84,23 @@ def load(operator, context, path):
         mesh_object['shader'] = mesh.shader
         mesh_object['comment'] = mesh.comment
 
-        for i, joint in enumerate(md5_mesh.joints):
-            if i in (weight.jointIndex for weight in mesh.weights):
+        for joint_index, joint in enumerate(md5_mesh.joints):
+            if joint_index in (weight.jointIndex for weight in mesh.weights):
                 vertex_group = mesh_object.vertex_groups.new(name=joint.name)
+                for vert in mesh.verts:
+                    for weight in mesh.weights[vert.weightStart:vert.weightEnd]:
+                        if joint_index == weight.jointIndex:
+                            vertex_group.add(
+                                index=[vert.index],
+                                weight=weight.bias,
+                                type='ADD')
 
-        for vert in mesh.verts:
-            for weight in mesh.weights[vert.weightStart:vert.weightEnd]:
-                joint = md5_mesh.joints[weight.jointIndex]
-                vertex_group = next(
-                    group for group in mesh_object.vertex_groups
-                    if group.name == joint.name
-                )
-                vertex_group.add(
-                    index=[vert.index],
-                    weight=weight.bias,
-                    type='ADD')
-
-        bm = bmesh.new()
-        bm.from_mesh(mesh_object.data)
-
-        uv_layer = bm.loops.layers.uv.verify()
-        deform_layer = bm.verts.layers.deform.verify()
-
-        for i, (vert, bm_vert) in enumerate(zip(mesh.verts, bm.verts)):
-            for loop in bm_vert.link_loops:
-                loop[uv_layer].uv = mesh.verts[i].uv
-            # for weight in mesh.weights[vert.weightStart:vert.weightEnd]:
-            #     bm_vert[deform_layer][weight.jointIndex] = weight.bias
-
-        bm.to_mesh(mesh_object.data)
-        bm.free()
+        mesh_data.uv_layers.new(do_init=False)
+        vert_uvs = [vert.uv for vert in mesh.verts]
+        mesh_data.uv_layers[-1].data.foreach_set('uv', [
+            uv for pair in [
+                vert_uvs[loop.vertex_index] for loop in mesh_data.loops] for uv in pair
+        ])
 
         modifier = mesh_object.modifiers.new(name=mesh_name, type='ARMATURE')
         modifier.object = armature_object

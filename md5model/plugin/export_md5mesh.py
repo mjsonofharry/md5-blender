@@ -39,6 +39,7 @@ def save(operator, context, path):
     for mesh_object in mesh_objects:
         shader = mesh_object.get('shader', '')
         comment = mesh_object.get('comment', '')
+
         tris = [
             Tri(index=i, verts=poly.vertices)
             for i, poly in enumerate(mesh_object.data.polygons)
@@ -51,27 +52,27 @@ def save(operator, context, path):
 
         verts: List[Vert] = []
         weights: List[Weight] = []
-        weight_count = 0
         for i, (vert, bm_vert) in enumerate(zip(mesh_object.data.vertices, bm.verts)):
             uv = bm_vert.link_loops[0][uv_layer].uv
-            verts.append(Vert(
+            new_vert = Vert(
                 index=i,
                 uv=(uv.x, uv.y),
-                weightStart=weight_count,
-                weightCount=len(vert.groups)))
+                weightStart=len(weights),
+                weightCount=len(vert.groups))
+            verts.append(new_vert)
             for vert_group in vert.groups:
                 bone = armature_object.data.bones[vert_group.group]
-                x, y, z = (
+                position = (
                     bone.matrix_local.inverted() @
                     armature_object.matrix_world.inverted() @
                     vert.co.to_4d()
-                )[:3]
-                weights.append(Weight(
-                    index=weight_count,
+                )
+                new_weight = Weight(
+                    index=len(weights),
                     jointIndex=vert_group.group,
                     bias=vert_group.weight,
-                    position=(x, y, z)))
-                weight_count += 1
+                    position=(position.x, position.y, position.z))
+                weights.append(new_weight)
 
         bm.free()
 
@@ -86,8 +87,7 @@ def save(operator, context, path):
         version=10,
         commandline=commandline,
         joints=joints,
-        meshes=meshes
-    )
+        meshes=meshes)
 
     f = open(path, 'w', encoding='utf-8')
     f.write(md5_mesh.to_string)
